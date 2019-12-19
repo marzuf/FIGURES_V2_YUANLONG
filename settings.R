@@ -16,6 +16,8 @@ myWidthGG <- 7
 
 step8fcc_folder <- "8cOnlyFCC_runAllDown"
 
+fontFamily <- "Hershey"
+
 # ggsci package palettes:
 #pal_npg()(100) # 10
 #pal_aaas()(100) # 10

@@ -43,8 +43,8 @@ maxTADs <- max(ceiling(nSignif_dt$nSignifTADs/10)*10)
 maxGenes <- max(ceiling(nSignif_dt$nSignifGenes/1000)*1000)
 
 outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withSymb.", plotType))
-do.call(plotType, list(outFile, height=myHeight, width=myWidth*2))
-par(bty="U")
+do.call(plotType, list(outFile, height=myHeight*1.2, width=myWidth*2))
+par(bty="U", family=fontFamily)
 par(mar = c(5,5,2,5))
 plot(
   x = 1:nrow(nSignif_dt),
@@ -61,11 +61,12 @@ plot(
   col.lab = tad_col,
   axes = FALSE
 )
+mtext(side=3, line=-1, text=paste0("all datasets - n= ", length(unique(nSignif_dt$dataset))))
 # mtext(side=1, col = labcols, text = nSignif_dt$dataset, at= 1:nrow(nSignif_dt), las=2, cex =0.5)
 axis(2, col = tad_col, col.ticks = tad_col, col.axis=tad_col, at=seq(from=0, to = maxTADs, by=10))
 axis(1, labels=F, lwd.ticks = -1)
 mtext(side=1, col = labcols, text = rep("\u25CF", nrow(nSignif_dt)), at= 1:nrow(nSignif_dt), las=2, cex = 1.2)
-par(new = T)
+par(new = T, family=fontFamily)
 plot(
   x = 1:nrow(nSignif_dt),
   y = nSignif_dt$nSignifGenes,
@@ -81,15 +82,19 @@ plot(
 )
 axis(side=4, col = gene_col, col.ticks = gene_col, col.axis=gene_col, at = seq(from=0, to=maxGenes, by=1000))
 mtext(side = 4, line = 3, '# signif. genes', col=gene_col,  cex=plotCex)
+
+# greycol <-  "#BEBEBE19"
+greycol <- "grey"
+abline(v=1:nrow(nSignif_dt), lty=3, col = greycol)
+
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
 
 
 
 
-
 outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withLeg.", plotType))
-do.call(plotType, list(outFile, height=myHeight, width=myWidth*2.5))
+do.call(plotType, list(outFile, height=myHeight*1.2, width=myWidth*2.5))
 par(bty="U")
 par(mar = c(5+2,5,2,5))
 plot(
@@ -107,6 +112,7 @@ plot(
   col.lab = tad_col,
   axes = FALSE
 )
+mtext(side=3, line=-1, text=paste0("all datasets - n= ", length(unique(nSignif_dt$dataset))))
 # mtext(side=1, col = labcols, text = nSignif_dt$dataset, at= 1:nrow(nSignif_dt), las=2, cex =0.5)
 axis(2, col = tad_col, col.ticks = tad_col, col.axis=tad_col, at=seq(from=0, to = maxTADs, by=10))
 axis(1, labels=F, lwd.ticks = -1)
@@ -127,6 +133,12 @@ plot(
 )
 axis(side=4, col = gene_col, col.ticks = gene_col, col.axis=gene_col, at = seq(from=0, to=maxGenes, by=1000))
 mtext(side = 4, line = 3, '# signif. genes', col=gene_col, cex=plotCex)
+
+# greycol <-  "#BEBEBE19"
+greycol <- "grey"
+abline(v=1:nrow(nSignif_dt), lty=3, col = greycol)
+
+
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
 

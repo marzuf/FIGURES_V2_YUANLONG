@@ -33,6 +33,7 @@ mycols <- eval(parse(text = paste0("pal_", ggsci_pal, "(", ggsci_subpal, ")")))(
 
 outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_FCCfract_pie_withLab.", plotType))
 do.call(plotType, list(outFile, height=myHeight*2, width=myWidth*2.5))
+par(family=fontFamily)
 pie(x=ds_dt$pct,labels = ds_dt$labs1, col=mycols,
     cex=plotCex,
     cex.main=2,
@@ -46,6 +47,7 @@ ds_dt$labs_2[ds_dt$pct < 1] <- ""
 
 outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_FCCfract_pie_withLeg.", plotType))
 do.call(plotType, list(outFile, height=myHeight*2, width=myWidth*2))
+par(family=fontFamily)
 pie(x=ds_dt$pct,labels = ds_dt$labs_2, col=mycols,
     cex.main=2,
     cex  =plotCex,
@@ -72,8 +74,8 @@ pie_fract <- ggplot(ds_dt, aes(x="", y=pct, fill=labs))+
   theme_minimal() +
   theme(axis.text.x=element_blank(), axis.text.y=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
-        plot.title = element_text(hjust = 0.5, size=14, face="bold"),
-        plot.subtitle = element_text(hjust = 0.5, size=13),
+        plot.title = element_text(hjust = 0.5, size=14, face="bold", family=fontFamily),
+        plot.subtitle = element_text(hjust = 0.5, size=13, family=fontFamily),
         panel.background = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),

@@ -6,6 +6,8 @@ require(foreach)
 require(ggplot2)
 require(ggsci)
 
+require(ggpubr)
+
 registerDoMC(40)
 
 plotType <- "svg"
@@ -28,6 +30,12 @@ labsymbol <- "\u25CF"
 
 ggsci_pal <- "lancet"
 ggsci_subpal <- ""
+
+fract_pals <- 
+
+auc_ratio_file <- file.path("BARPLOT_FCC_AUC_RATIO", "all_dt.Rdata")
+stopifnot(file.exists(auc_ratio_file))
+
 
 if(buildData){
   all_dt <- foreach(hicds = all_hicds, .combine='rbind') %dopar%{
@@ -95,20 +103,18 @@ fract_plot_with_lab <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFC
   eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
   eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
   theme( # Increase size of axis lines
-    strip.text = element_text(size = 12),
-    plot.title = element_text(hjust = 0.5, face = "bold", size=16),
-    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14),
+    plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
     panel.grid = element_blank(),
     panel.grid.major.y = element_line(colour = "grey"),
     panel.grid.minor.y = element_line(colour = "grey"),
-    strip.text.x = element_text(size = 10),
     axis.line.x = element_line(size = .2, color = "black"),
     axis.line.y = element_line(size = .3, color = "black"),
-    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12),
-    axis.text.x = element_text(color=mycols, hjust=1,vjust = 0.5, size=7, angle=90),
+    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color=mycols, hjust=1,vjust = 0.5, size=7, angle=90, family=fontFamily),
     axis.ticks.x = element_blank(),
-    axis.title.y = element_text(color="black", size=14),
-    axis.title.x = element_text(color="black", size=14),
+    axis.title.y = element_text(color="black", size=14, family=fontFamily),
+    axis.title.x = element_text(color="black", size=14, family=fontFamily),
     panel.border = element_blank(),
     panel.background = element_rect(fill = "transparent"),
     legend.background =  element_rect(),
@@ -120,10 +126,7 @@ outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withLabs_barplot
 ggsave(plot = fract_plot_with_lab, filename = outFile, height=myHeightGG, width = myWidthGG*2)
 cat(paste0("... written: ", outFile, "\n"))
 
-
-
 all_dt$labSymb <- labsymbol
-
 
 fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFCC, color=intervalFCC)) + 
   geom_bar(position="stack", stat="identity") +
@@ -136,30 +139,75 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
                      breaks = scales::pretty_breaks(n = 10))+
   scale_x_discrete(labels=all_dt$labSymb, name="")+
   theme( # Increase size of axis lines
-    strip.text = element_text(size = 12),
-    plot.title = element_text(hjust = 0.5, face = "bold", size=16),
-    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14),
+    plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
     panel.grid = element_blank(),
     panel.grid.major.y = element_line(colour = "grey"),
     panel.grid.minor.y = element_line(colour = "grey"),
-    strip.text.x = element_text(size = 10),
     axis.line.x = element_line(size = .2, color = "black"),
     axis.line.y = element_line(size = .3, color = "black"),
-    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12),
-    axis.text.x = element_text(color=mycols, hjust=1,vjust = 0.5, size=12, angle=90),
+    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color=mycols, hjust=1,vjust = 0.5, size=12, angle=90, family=fontFamily),
     axis.ticks.x = element_blank(),
-    axis.title.y = element_text(color="black", size=14),
-    axis.title.x = element_text(color="black", size=14),
+    axis.title.y = element_text(color="black", size=14, family=fontFamily),
+    axis.title.x = element_text(color="black", size=14, family=fontFamily),
     panel.border = element_blank(),
     panel.background = element_rect(fill = "transparent"),
     legend.background =  element_rect(),
     legend.key = element_blank(),
-    legend.title = element_text(face="bold")
+    legend.title = element_text(face="bold", family=fontFamily)
   )
 
 outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withSymb_barplot.", plotType))
 ggsave(plot = fract_plot_with_symb, filename = outFile, height=myHeightGG, width = myWidthGG*2)
 cat(paste0("... written: ", outFile, "\n"))
+
+######################################################################################
+# FRACT and FCC AUC
+######################################################################################
+
+auc_fract_dt <- all_dt
+auc_ratio_dt <- get(load(auc_ratio_file))
+
+auc_fract_ratio_dt <- merge(auc_fract_dt, auc_ratio_dt, by=c("hicds", "exprds"), all.x=TRUE, all.y=TRUE)
+stopifnot(!is.na(auc_fract_ratio_dt))
+
+auc_fract_ratio_dt$intervalFCC <- gsub("FCC ", "", auc_fract_ratio_dt$intervalFCC)
+# auc_fract_ratio_dt$intervalFCC <- factor(auc_fract_ratio_dt$intervalFCC, levels=rev(fcc_fract_names))
+auc_fract_ratio_dt$intervalFCC <- factor(auc_fract_ratio_dt$intervalFCC, levels=rev(gsub("FCC ", "", fcc_fract_names)))
+
+myPals <-  eval(parse(text=paste0("pal_", ggsci_pal, "(", ggsci_subpal, ")")))(length(unique(auc_fract_ratio_dt$intervalFCC)))
+
+scatPlot <- ggscatter(auc_fract_ratio_dt, 
+                      title = paste0("all datasets (n=", length(unique(file.path(auc_fract_ratio_dt$hicds, auc_fract_ratio_dt$exprds))), ")"),
+          x = "fcc_auc", 
+          y = "countFCC",
+          color = "intervalFCC",
+          xlab = "FCC AUC ratio",
+          ylab = "Ratio of TADs",
+          palette = myPals)+
+  labs(color="FCC range:")+
+  geom_smooth(aes(color = intervalFCC),method = "lm", linetype=2, se=F)+
+  theme( # Increase size of axis lines
+    plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
+    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_text(color="black", size=14, family=fontFamily),
+    axis.title.x = element_text(color="black", size=14, family=fontFamily),
+    panel.border = element_blank(),
+    panel.background = element_rect(fill = "transparent"),
+    legend.background =  element_rect(),
+    legend.title = element_text(face="bold", family=fontFamily)
+  )
+
+
+outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_fcc_auc_scatterplot.", plotType))
+ggsave(plot = fract_plot_with_symb, filename = outFile, height=myHeightGG, width = myWidthGG)
+cat(paste0("... written: ", outFile, "\n"))
+
+
 
 
 
