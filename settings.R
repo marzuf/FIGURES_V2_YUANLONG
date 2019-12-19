@@ -7,8 +7,8 @@ all_exprds <- sapply(all_hicds, function(x) list.files(file.path(pipFolder, x)))
 
 plotCex <- 1.4
 
-myHeight <- ifelse(plotType == "png", 400, 400)
-myWidth <- ifelse(plotType == "png", 400, 400)
+myHeight <- ifelse(plotType == "png", 400, 7)
+myWidth <- ifelse(plotType == "png", 400, 7)
 
 myHeightGG <- 7
 myWidthGG <- 7

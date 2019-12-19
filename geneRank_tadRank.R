@@ -5,6 +5,7 @@ plotType <- "png"
 
 source("settings.R")
 require(ggsci)
+require(VennDiagram)
 
 source("../Cancer_HiC_data_TAD_DA/utils_fct.R")
 
@@ -34,6 +35,9 @@ last_col <- pal_d3()(2)[2]
 # [1]  "#BEBEBE19"
 mid_col <-  "#BEBEBE19"
 
+geneSignifPval <- 0.05
+tadSignifPval <- 0.01
+
 
 nTop <- 10
 
@@ -47,7 +51,7 @@ stopifnot(!is.na(ds_dt$dotCol))
 plot_dt <- ds_dt[ds_dt$region %in% top_reg | ds_dt$region %in% last_reg ,]
 
 
-outFile <- file.path(outFolder, paste0("geneRank_tadRank_densplot.", plotType))
+outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_geneRank_tadRank_densplot.", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth))
 par(bty="l", family=fontFamily)
 densplot(
@@ -105,7 +109,7 @@ cat(paste0("... written: ", outFile, "\n"))
 plot_dt <- plot_dt[order(plot_dt$dotCol, plot_dt$gene_rank), ]
 
 
-outFile <- file.path(outFolder, paste0("geneRank_tadRank_geneOrder_top", nTop, "_barplot.", plotType))
+outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_geneRank_tadRank_geneOrder_top", nTop, "_barplot.", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth*2))
 par(bty="l", family=fontFamily)
 barpos <- barplot(plot_dt$gene_rank, col = plot_dt$dotCol,
@@ -139,7 +143,7 @@ geneBar_pos <- 1
 tadBar_pos <- 2
 axisOffset <- 0.5
 
-outFile <- file.path(outFolder, paste0("geneRank_tadRank_topBars_nTop", nTop, "_segments.", plotType))
+outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_geneRank_tadRank_topBars_nTop", nTop, "_segments.", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth*1.2))
 
 par(bty="n", family=fontFamily)
@@ -231,7 +235,7 @@ geneBar_pos <- 1
 tadBar_pos <- 2
 axisOffset <- 0.5
 
-outFile <- file.path(outFolder, paste0("medGeneRank_tadRank_topBars_nTop", nTop, "_segments.", plotType))
+outFile <- file.path(outFolder, paste0(hicds,"_", exprds, "_medGeneRank_tadRank_topBars_nTop", nTop, "_segments.", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth*1.2))
 
 par(bty="n", family=fontFamily)
@@ -299,5 +303,67 @@ cat(paste0("... written: ", outFile, "\n"))
 
 
 
+#########################################################################################################################
+#### VENN DIAGRAM
+#########################################################################################################################
+stopifnot(!duplicated(ds_dt$entrezID))
+stopifnot(!duplicated(tad_dt$region))
 
+signif_genes <-  ds_dt$entrezID[ds_dt$adj.P.Val <= geneSignifPval ]
+signif_tads <-  ds_dt$entrezID[ds_dt$tad_adjCombPval <= tadSignifPval ]
+
+signif_genesOnly <- ds_dt$entrezID[ds_dt$adj.P.Val <= geneSignifPval &
+                                     ds_dt$tad_adjCombPval > tadSignifPval ]
+nSignif_genesOnly <- length(signif_genesOnly)
+
+signif_genesAndTADs <- ds_dt$entrezID[ds_dt$adj.P.Val <= geneSignifPval &
+                                     ds_dt$tad_adjCombPval <= tadSignifPval ]
+nSignif_genesAndTADs <- length(signif_genesAndTADs)
+
+signif_tadsOnly <- ds_dt$entrezID[ds_dt$adj.P.Val > geneSignifPval &
+                                        ds_dt$tad_adjCombPval <= tadSignifPval ]
+nSignif_tadsOnly <- length(signif_tadsOnly)
+
+stopifnot(nSignif_genesOnly+nSignif_tadsOnly+nSignif_genesAndTADs == sum(ds_dt$tad_adjCombPval <= tadSignifPval | ds_dt$adj.P.Val <= geneSignifPval))
+
+outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_nbrSignifGenes_vennDiagram.", plotType))
+
+require(ggplot2)
+require(ggsci)
+
+vd <- venn.diagram(
+  x = list(signif_genes, signif_tads),
+  main = paste0("# signif. genes"),
+  sub = paste0(hicds, " - ", exprds),
+  category.names = c(paste0("signif. gene-level\n(", nSignif_genesOnly+nSignif_genesAndTADs, ")") , paste0("signif. TAD level\n(", nSignif_tadsOnly+nSignif_genesAndTADs, ")")),
+  
+  fontfamily="Hershey",
+  cat.fontfamily="Hershey",
+  main.fontfamily="Hershey",
+  sub.fontfamily="Hershey",
+  
+  sub.fontface="plain",
+  main.fontface="bold",
+  
+  margin=c(0,0,0,0),
+  
+  main.cex = 2,
+  sub.cex=1.6,
+  cat.cex=1.4,
+  cex = 2,
+  
+  cat.default.pos="outer",
+  cat.pos=c(-25, 25),
+  
+  cat.col = pal_lancet()(2),
+  fill = pal_lancet()(2),
+  col = pal_lancet()(2),
+  alpha=0.2,
+  scaled=FALSE,
+  filename = NULL
+)
+ggsave(vd, file=outFile,height=myHeightGG, width=myWidthGG)
+cat(paste0("... written: ", outFile, "\n"))
+
+system(paste0("rm -f VennDiagram2019*.log"))
 
