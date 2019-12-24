@@ -1,5 +1,5 @@
 
-# python plotHiC_withTADs.py
+# python plotHiC_withTADs_withCols.py
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -39,37 +39,44 @@ def to_matrix(data, chrom1, chrom2,
 
 
 
+#def load_tad_list(tad_file, with_labs, **args):
+#    tad_dt = pd.read_csv(tad_file, **args)
+#    
+#    if tad_dt.shape[1] - int(with_labs) == 3:
+#        #return([np.array(tad_dt.iloc[:,1]), np.array(tad_dt.iloc[:,2])])
+#        tad_pos = [list(tad_dt.iloc[:,1]), list(tad_dt.iloc[:,2])]
+#    elif tad_dt.shape[1] - int(with_labs) == 2:
+#        #return([np.array(tad_dt.iloc[:,0]), np.array(tad_dt.iloc[:,1])])
+#        tad_pos = [list(tad_dt.iloc[:,0]), list(tad_dt.iloc[:,1])]
+#    else:
+#            return None
+#        
+#    if with_labs:
+#        tad_pos.append(list(tad_dt.iloc[:,tad_dt.shape[1]-1]))
+#    return tad_pos
+
+# all expected to have chromo-start-end-label-color
+
 def load_tad_list(tad_file, with_labs, **args):
     tad_dt = pd.read_csv(tad_file, **args)
-    
-    if tad_dt.shape[1] - int(with_labs) == 3:
-        #return([np.array(tad_dt.iloc[:,1]), np.array(tad_dt.iloc[:,2])])
-        tad_pos = [list(tad_dt.iloc[:,1]), list(tad_dt.iloc[:,2])]
-    elif tad_dt.shape[1] - int(with_labs) == 2:
-        #return([np.array(tad_dt.iloc[:,0]), np.array(tad_dt.iloc[:,1])])
-        tad_pos = [list(tad_dt.iloc[:,0]), list(tad_dt.iloc[:,1])]
-    else:
-            return None
-        
-    if with_labs:
-        tad_pos.append(list(tad_dt.iloc[:,tad_dt.shape[1]-1]))
-    return tad_pos
+    return [list(tad_dt.iloc[:,1]), list(tad_dt.iloc[:,2]), list(tad_dt.iloc[:,3]), list(tad_dt.iloc[:,4])]
+
 
 
 
 # SETTINGS FOR HI-C MATRIX
 #matrix_file = "/media/electron//mnt/ptemp/luca/hic_enhance/data/hic/Rao2014-GM12878-full/Rao2014_observed_NONE_1_1_50000.txt"
-matrix_file = "/mnt/ptemp/luca/hic_enhance/data/hic/Rao2014-GM12878-full/Rao2014_observed_NONE_1_1_50000.txt"
-resolution = 50000
+matrix_file = "mat_chr11_40kb_ob.txt"
+resolution = 40000
 
 # SETTINGS FOR TAD DATA
-tad_file = "tad_list_4cols.txt"  # can be 2-col or 3-col
+tad_file = "ENCSR489OCU_NCI-H460_40kb_coord11.txt"  # can be 2-col or 3-col
 plot_labs = True
 
 # SET WHAT TO PLOT:
-chrom = 'chr1'
-map_start=0
-map_end=20000000
+chrom = 'chr11'
+map_start=102200001
+map_end=103320000
 
 
 # OUTFILE 
@@ -106,7 +113,7 @@ plt.yticks([])
 plt.axis('on')
 
 
-for tad_start, tad_end in zip(tad_toplot[0], tad_toplot[1]):
+for tad_start, tad_end , tad_lab, tad_col in zip(tad_toplot[0], tad_toplot[1], tad_toplot[2], tad_toplot[3]):
 
     tad_start_bin = (tad_start - map_start)//resolution  
     tad_end_bin = (tad_end - map_start)//resolution
@@ -123,24 +130,26 @@ for tad_start, tad_end in zip(tad_toplot[0], tad_toplot[1]):
         [conv_end, diagonal_height]
     ])
 
-    tadTri = plt.Polygon(tad_triangle, facecolor='none', edgecolor='black', linewidth=lwd)
+    tadTri = plt.Polygon(tad_triangle, facecolor='none', edgecolor=tad_col, linewidth=lwd)
     ax.add_patch(tadTri)
 
+    plt.text(0.5*(conv_start+conv_end),tad_height,tad_lab, fontsize=10, horizontalalignment='center', verticalalignment='bottom')
+
     
-if plot_labs:
-    for tad_start, tad_end, tad_lab in zip(tad_toplot[0], tad_toplot[1], tad_toplot[2]):
-        tad_start_bin = (tad_start - map_start)//resolution  
-        tad_end_bin = (tad_end - map_start)//resolution
+#if plot_labs:
+#    for tad_start, tad_end, tad_lab in zip(tad_toplot[0], tad_toplot[1], tad_toplot[2]):
+#        tad_start_bin = (tad_start - map_start)//resolution  
+#        tad_end_bin = (tad_end - map_start)//resolution
 
-        conv_start = np.sqrt(2) * tad_start_bin  # distance to bin start: on the side of the square, it is the # of bins but in triangle plot, it is the diagonal
-        conv_end = np.sqrt(2) * tad_end_bin
-        
+#        conv_start = np.sqrt(2) * tad_start_bin  # distance to bin start: on the side of the square, it is the # of bins but in triangle plot, it is the diagonal
+#        conv_end = np.sqrt(2) * tad_end_bin
+#        
 
-        tad_height = diagonal_height-(conv_end-conv_start)*0.5  # needs the "diagonal_heigh" because the way it is plotted and the orientation of the y-axis
-        
-        plt.text(0.5*(conv_start+conv_end),tad_height,tad_lab, fontsize=10, horizontalalignment='center', verticalalignment='bottom')
-        #
-        # plt.text(0.5*(conv_start+conv_end),tad_height,tad_lab, fontsize=10)
+#        tad_height = diagonal_height-(conv_end-conv_start)*0.5  # needs the "diagonal_heigh" because the way it is plotted and the orientation of the y-axis
+#        
+#        plt.text(0.5*(conv_start+conv_end),tad_height,tad_lab, fontsize=10, horizontalalignment='center', verticalalignment='bottom')
+#        #
+#        # plt.text(0.5*(conv_start+conv_end),tad_height,tad_lab, fontsize=10)
     
 
 if output_file:

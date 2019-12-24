@@ -14,11 +14,15 @@ startTime <- Sys.time()
 
 plotType <- "svg"
 
+synType <- "inferCARs" #inferCARs or proCARs
+
 source("settings.R")
 
 require(ggsci)
-tad_col <- pal_d3()(2)[1]
-gene_col <- pal_d3()(2)[2]
+tad_col <- pal_d3()(3)[1]
+gene_col <- pal_d3()(3)[2]
+syn_col <- pal_d3()(3)[3]
+
 
 outFolder <- file.path("CONSERVED_REGIONS_VIZ")
 dir.create(outFolder, recursive = TRUE)
@@ -67,7 +71,6 @@ stopifnot(length(nConserved) == nrow(conserved_dt))
 
 maxConserved <- names(which.max(nConserved))
 
-
 max_dt <- conserved_dt[conserved_dt$conserved_region == maxConserved,,drop=F]
 stopifnot(nrow(max_dt) == 1)
 
@@ -101,20 +104,51 @@ stopifnot(length(chromo) == 1)
 dsSpace <- 0.5
 geneSpace <- 0.2
 
+ySynt <- 0.1
+
 tadOffset <- 50000
-yOffset <- 0.3
 
 textOffset <- 0.05
 
 xStart <- min(as.numeric(as.character(all_regions_starts_ends["start",]))) - tadOffset
 xEnd <- max(as.numeric(as.character(all_regions_starts_ends["end",]))) + tadOffset
 
+#### retrieve if there is synteny
+synt_dt <- get(load(file.path(runFolder, paste0("SIGNIF_CONSERVED_REGIONS_AND_SYNTENY/", synType, "_overlapDT_bp.Rdata"))))
+
+
+if(maxConserved %in% synt_dt$refID) {
+  syntOffset <- 0.1
+  yOffset <- 0.3 + syntOffset
+  
+  if(synType == "proCARs") {
+    block_dt <- read.delim(file.path(runFolder, "procars_orthology_blocks_processsed.txt"), header=TRUE, stringsAsFactors = FALSE)  
+    block_dt$genome[block_dt$genome == "homo_sapiens"] <- "hg19"
+
+  } else if(synType == "inferCARs") {
+    block_dt <- read.delim(file.path(runFolder, "inferCARs_data/Orthology.Blocks_processed_hg19.txt"), header=TRUE, stringsAsFactors = FALSE)  
+    
+  } else {
+    stop("-----ok\n")
+  }
+  synmatch_start <- block_dt$start[
+    block_dt$genome == "hg19" &
+      block_dt$blockID %in% synt_dt$queryID[synt_dt$refID == maxConserved]]
+  synmatch_end <- block_dt$end[
+    block_dt$genome == "hg19" &
+      block_dt$blockID %in% synt_dt$queryID[synt_dt$refID == maxConserved]]
+  
+} else {
+  yOffset <- 0.3   
+}
+
+
 dsPos <- seq(from=0, by=dsSpace, length.out=ncol(all_regions_starts_ends))
 genePos <- seq(from = max(dsPos) + dsSpace, by=geneSpace, length.out=ncol(all_genes_starts_ends))
 yStart <- min(c(dsPos, genePos)) - yOffset
 yEnd <- max(c(dsPos, genePos)) + yOffset
 
-outFile <- file.path(outFolder, paste0(maxConserved, "_viz.", plotType))
+outFile <- file.path(outFolder, paste0(maxConserved, "_", synType, "_viz.", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth*2))
 initMar <- par()$mar
 par(mar=initMar+c(0,10,0,0))
@@ -174,28 +208,26 @@ segments(x0=c(as.numeric(all_genes_starts_ends["start",]), as.numeric(all_genes_
          y1 = rep(genePos,each=2),
          lty=2, col = gene_col)
 
+segments(
+  x0 = synmatch_start,
+  y0=max(genePos) + syntOffset,
+  x1=synmatch_end,
+  y1=max(genePos) + syntOffset,
+  col = syn_col
+)
+
+  text(
+    x = min(synmatch_start),
+    y = max(genePos) + syntOffset,
+    labels = paste0(synType),
+    # cex = 0.5,
+    cex = 0.7,
+    pos=2,
+    col = syn_col
+  )
+
+foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
