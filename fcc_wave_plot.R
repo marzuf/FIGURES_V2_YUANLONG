@@ -19,6 +19,18 @@ plotCex <- 1.4
 require(flux)
 
 
+# set colors:
+polygonPermutCol <- rgb(188/255,188/255,188/255, 0.3)
+meanPermutCol <- rgb(135/255,135/255,135/255, 0.3)
+# qt95PermutCol <- rgb(140/255,140/255,140/255, 0.3)
+qt95PermutCol <- rgb(140/255,140/255,140/255)
+lwdObs <- 1.2
+colObs <- "darkred"
+pointObsCol <- colObs
+
+
+
+
 args <- commandArgs(trailingOnly = TRUE)
 stopifnot(length(args) == 2)
 hicds <- args[1]
@@ -154,8 +166,8 @@ outFile <- paste0(outFolder, "/", curr_ratio_type, "_departure05_cumsum_obs_perm
 do.call(plotType, list(outFile, height=myHeight, width=myWidth))
 
 
-# my_main <- paste0("FCC cumulative sum curves")
-my_main <- paste0(hicds, " - " , exprds)
+my_main <- paste0("Genome-wide intra-TAD fold-change concordance")
+my_sub <- paste0(hicds, " - " , exprds)
 my_xlab <- paste0("TADs ranked by FCC")
 my_ylab <- paste0("FCC cumulative sum")
 
@@ -163,17 +175,6 @@ observ_vect= filter_obs_curr_down_half
 permut_DT=filter_permut_currDown_half
 my_stat = my_stat_curr_ratio
 
-polygonPermutCol <- rgb(188/255,188/255,188/255, 0.3)
-meanPermutCol <- rgb(135/255,135/255,135/255, 0.3)
-
-
-drawline=TRUE
-
-plotTrueType <- ifelse(drawline, "l", "p")
-
-lwdObs <- 1.2
-colObs <- "darkred"
-pointObsCol <- colObs
 
 observ_vect <- sort(observ_vect, decreasing = T)
 permut_DT <- apply(permut_DT, 2, sort, decreasing=T)
@@ -181,13 +182,14 @@ permut_DT <- apply(permut_DT, 2, sort, decreasing=T)
 x_val <- c(1:length(observ_vect))
 diff_05_permut <- apply(permut_DT, 2, function(x) cumsum(abs(x-0)))
 
-meanPermut_cumsum <- apply(diff_05_permut, 1, function(x) mean(x)) 
+meanPermut_cumsum <- apply(diff_05_permut, 1, mean)
+qt95Permut_cumsum <- apply(diff_05_permut, 1, quantile, probs=0.95)
 
 obs_cumsum <- cumsum(abs(observ_vect - 0))
 
 plot(obs_cumsum ~ x_val,
    main= my_main,
-   type = plotTrueType,
+   type = "l",
    pch = 16, cex = 0.7,
    xlab= my_xlab, 
    ylab= my_ylab,
@@ -195,24 +197,35 @@ plot(obs_cumsum ~ x_val,
    cex.lab = plotCex,
    cex.axis = plotCex,
    col = colObs,
+   axes=FALSE,
    lwd = lwdObs,
    bty="l")
+box()
+axis(2, cex.axis=plotCex, cex.lab=plotCex)
+axis(1, cex.axis=plotCex, cex.lab=plotCex, at = seq(from=0, to=2000, by=200))
 
+mtext(my_sub, font=3)
 
 polygon(x = c(x_val, rev(x_val)), 
       y = c( apply(diff_05_permut, 1, function(x) min(x)), rev(apply(diff_05_permut, 1, function(x) max(x)))),
       border=NA,
       col = polygonPermutCol)
+# lines(
+#   x = x_val,
+#   y= meanPermut_cumsum,
+#   col = meanPermutCol
+# )
 
 lines(
   x = x_val,
-  y= meanPermut_cumsum,
-  col = meanPermutCol
+  y= qt95Permut_cumsum,
+  col = qt95PermutCol
 )
-
 
 auc_obs <- auc(x = x_val, y = obs_cumsum)
 auc_permut <- auc(x = x_val, y = meanPermut_cumsum)
+auc_permutQt <- auc(x = x_val, y = qt95Permut_cumsum)
+
 
 # save(auc_obs, file= "auc_obs.Rdata")
 # save(auc_permut, file="auc_permut.Rdata")
@@ -221,26 +234,47 @@ auc_permut <- auc(x = x_val, y = meanPermut_cumsum)
 # save(meanPermut_cumsum, file ="meanPermut_cumsum.Rdata")
 
 pct_inc <- round(auc_obs/auc_permut,2)
+pct_inc_qt <- round(auc_obs/auc_permutQt,2)
 
+# 
+# legend("topleft",
+#      xjust=0.5, yjust=0,
+#      pch = c(16, 15), 
+#      legend = c(paste0("observed (n=", length(observ_vect), ")"), "min-max permut"), 
+#      pt.cex = c(0.7, 2),
+#      col = c(pointObsCol, polygonPermutCol),
+#      bty="n")
+
+# legend("topleft",
+#        xjust=0.5, yjust=0,
+#        pch = c(16, 15, -1, -1 ),
+#        lty=c(-1,-1,1,1),
+#        legend = c(paste0("observed (n=", length(observ_vect), ")"), "min-max permut.", "avg. permut.", "0.95-qt permut."), 
+#        pt.cex = c(0.7, 2),
+#        col = c(pointObsCol, polygonPermutCol, meanPermutCol, qt95PermutCol),
+#        bty="n")
+# legtxt1 <- as.expression(bquote(frac(AUC[obs.], AUC[avg.permut.]) == .(pct_inc)))
+# legtxt2 <- as.expression(bquote(frac(AUC[obs.], AUC[qt.permut.]) == .(pct_inc_qt)))
+# legend("bottomright", legend=c(legtxt1, legtxt2), bty="n")
 legend("topleft",
-     xjust=0.5, yjust=0,
-     pch = c(16, 15), 
-     legend = c(paste0("observed (n=", length(observ_vect), ")"), "min-max permut"), 
-     pt.cex = c(0.7, 2),
-     col = c(pointObsCol, polygonPermutCol),
-     bty="n")
+       xjust=0.5, yjust=0,
+       pch = c(16, 15, -1 ),
+       lty=c(-1,-1,1),
+       legend = c(paste0("observed (n=", length(observ_vect), ")"), "min-max permut.", "0.95-qt permut."), 
+       pt.cex = c(0.7, 2),
+       col = c(pointObsCol, polygonPermutCol, qt95PermutCol),
+       bty="n")
+legtxt <- as.expression(bquote(frac(AUC[obs.], AUC[permut.]) == .(pct_inc_qt)))
+# legend("bottomright", legend=c(legtxt), bty="n")
+legend("right", legend=c(legtxt), bty="n")
 
-text(x = length(observ_vect), y = 0+50,
-     pos=2,
-     bquote(frac(AUC[obs.], AUC[permut.]) == .(pct_inc)))
-  
+# text(x = length(observ_vect), y = 0+50,
+#      pos=2,
+#      bquote(frac(AUC[obs.], AUC[permut.]) == .(pct_inc)))
 
-mtext(subtitDir, font=3)
 
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
-
-
 
 txt <- paste0(startTime, "\n", Sys.time(), "\n")
 #printAndLog(txt, pipLogFile)
