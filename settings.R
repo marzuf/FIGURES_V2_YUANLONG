@@ -38,3 +38,9 @@ fontFamily <- "Hershey"
 #pal_simpsons()(100) # 16
 #pal_gsea()(100) # 12
 #pal_material()(100) # 10
+
+source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
+all_cols[all_cols == "red"] <- "brown3"
+all_cols[all_cols == "blue"] <- "darkblue"
+all_cols[all_cols == "green"] <- "forestgreen"
+

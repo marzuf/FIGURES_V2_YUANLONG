@@ -12,14 +12,14 @@ registerDoMC(40)
 
 plotType <- "svg"
 
-source("settings.R")
 source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
+source("settings.R")
 
 
 outFolder <- "BARPLOT_WITH_FCC_FRACT"
 dir.create(outFolder, recursive = TRUE)
 
-buildData <- TRUE
+buildData <- FALSE
 
 fcc_fract <- seq(from=-1, to=1, by=0.25)
 # fcc_fract_names <- paste0("FCC > ", fcc_fract[1:(length(fcc_fract)-1)], " and FCC <= ",fcc_fract[2:length(fcc_fract)])
@@ -34,6 +34,11 @@ labsymbol <- "\u25CF"
 
 ggsci_pal <- "lancet"
 ggsci_subpal <- ""
+
+legTitle <- "FCC ranges"
+fractBarSubTitle <- "AUC ratios:\n"
+fractBarTitle <- "Fold-change concordance scores"
+
 
 auc_ratio_file <- file.path("BARPLOT_FCC_AUC_RATIO", "all_dt.Rdata")
 stopifnot(file.exists(auc_ratio_file))
@@ -104,25 +109,34 @@ if(fcc_auc_sort) {
   stopifnot(!is.na(all_dt$dataset))
 }
 
+nDS <- length(unique(all_dt$dataset))
+
+legDT <- data.frame(cmpType = names(all_cols), cmpColor = as.character(all_cols))
+legDT <- legDT[rev(order(legDT$cmpType)),]
+
 mycols <- all_cols[all_cmps[exprds_order]]
 # tmp_dt <- aggregate(countFCC~ intervalFCC, data=all_dt, FUN=sum) # none has zero
 
+
 fract_plot_with_lab <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFCC, color=intervalFCC)) + 
   geom_bar(position="stack", stat="identity") +
-  ggtitle("Fold-change concordance scores", subtitle = "(all datasets)")+
-  scale_x_discrete(name="")+
-  labs(fill="FCC range") + 
+  ggtitle(paste0(fractBarTitle), 
+          subtitle = paste0(fractBarSubTitle) )+
+          # subtitle = "(all datasets)")+
+  scale_x_discrete(name=paste0("(all datasets - n=", nDS, ")"))+
+  labs(fill=paste0(legTitle)) + 
   guides(color=FALSE)+
-  coord_cartesian(expand=TRUE)+
+  # coord_cartesian(expand=FALSE)+
+  coord_cartesian(clip = 'off', expand=FALSE) +
   scale_y_continuous(name=paste0("Fraction of TADs"),
-                     limits = c(0,1.05), 
+                     limits = c(0,1), 
                      breaks = seq(from=0, to=1, by=0.1),
                      labels = seq(from=0, to=1, by=0.1))+
   eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
   eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
   theme( # Increase size of axis lines
     plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
-    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0, vjust=2,face = "italic", size =8, family=fontFamily, lineheight = 1.75),
     panel.grid = element_blank(),
     # panel.grid.major.y = element_line(colour = "grey"),
     # panel.grid.minor.y = element_line(colour = "grey"),
@@ -140,7 +154,21 @@ fract_plot_with_lab <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFC
     legend.key = element_blank(),
     legend.title = element_text(face="bold")
   ) +
-  geom_text(data=x, aes(x = x$dataset, y=1, label=round(x$fcc_auc,2)), inherit.aes=FALSE, angle=90, size=3, vjust=0.5, hjust=0)
+  geom_text(data=x, aes(x = x$dataset, y=1, 
+                        label=sprintf("%.2f", x$fcc_auc)),
+            inherit.aes=FALSE, angle=90, size=3, 
+            vjust=0.5, hjust=0)+
+  theme(
+    # legend.position = c(.95, .95),
+    # legend.box.just = "right",
+    # legend.margin = margin(6, 6, 6, 6),
+    legend.justification = c("right", "top")
+  )+ 
+  geom_text(data=legDT, aes(label = legDT$cmpType, x = 59, y =c(0, 0.05, 0.1)),
+            vjust = 0, hjust=0,
+            inherit.aes = FALSE, color = legDT$cmpColor)
+
+
 
 outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withLabs_barplot.", plotType))
 ggsave(plot = fract_plot_with_lab, filename = outFile, height=myHeightGG, width = myWidthGG*2)
@@ -148,22 +176,26 @@ cat(paste0("... written: ", outFile, "\n"))
 
 all_dt$labSymb <- labsymbol
 
+
 fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFCC, color=intervalFCC)) + 
   geom_bar(position="stack", stat="identity") +
-  coord_cartesian(expand = TRUE) +
-  ggtitle("Fold-change concordance scores", subtitle = "(all datasets)")+
+  # coord_cartesian(expand = FALSE) +
+  coord_cartesian(clip = 'off', expand=FALSE) +
+  ggtitle(paste0(fractBarTitle), 
+          subtitle = "AUC ratios:\n")+
+          # subtitle = "(all datasets)")+
   labs(fill="FCC range")+
   guides(color=FALSE)+
   eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
   eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
   scale_y_continuous(name=paste0("Fraction of TADs"),
-                     limits = c(0,1.05), 
+                     limits = c(0,1), 
                      breaks = seq(from=0, to=1, by=0.1),
                      labels = seq(from=0, to=1, by=0.1))+
-  scale_x_discrete(labels=all_dt$labSymb, name="")+
+  scale_x_discrete(labels=all_dt$labSymb, name=paste0("(all datasets - n=", nDS, ")"))+
   theme( # Increase size of axis lines
     plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
-    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0, vjust=2, face = "italic", size = 8, family=fontFamily, lineheight = 1.75),
     panel.grid = element_blank(),
     # panel.grid.major.y = element_line(colour = "grey"),
     # panel.grid.minor.y = element_line(colour = "grey"),
@@ -181,7 +213,20 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
     legend.key = element_blank(),
     legend.title = element_text(face="bold", family=fontFamily)
   )+
-  geom_text(data=x, aes(x = x$dataset, y=1, label=round(x$fcc_auc,2)), inherit.aes=FALSE, angle=90, size=3, vjust=0.5, hjust=0)
+  geom_text(data=x, aes(x = x$dataset, y=1, 
+                        label=sprintf("%.2f", x$fcc_auc)),
+            inherit.aes=FALSE, angle=90, size=3, vjust=0.5, hjust=0) +
+  theme(
+    # legend.position = c(.95, .95),
+    # legend.box.just = "right",
+    # legend.margin = margin(6, 6, 6, 6),
+    legend.justification = c("right", "top")
+  ) + 
+  geom_text(data=legDT, aes(label = paste0(labsymbol, " ", legDT$cmpType), x = 59, y =c(0, 0.05, 0.1)),
+            vjust = 0, hjust=0,
+            inherit.aes = FALSE, color = legDT$cmpColor)
+
+
 
 
 
