@@ -1,12 +1,11 @@
 
 plotType <- "png"
 
-source("settings.R")
-require(ggsci)
 
 source("../Cancer_HiC_data_TAD_DA/utils_fct.R")
-
 source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
+source("settings.R")
+require(ggsci)
 
 # Rscript nSignifGenes_nSignifTADs.R
 
@@ -18,6 +17,8 @@ tadSignifThresh <- 0.01
 
 gene_col <- pal_d3()(2)[1]
 tad_col <- pal_d3()(2)[2]
+
+dotSymb <- "\u25CF"
 
 
 inDT <- get(load("../v2_Yuanlong_Cancer_HiC_data_TAD_DA/GENE_RANK_TAD_RANK/all_gene_tad_signif_dt.Rdata"))
@@ -61,11 +62,13 @@ plot(
   col.lab = tad_col,
   axes = FALSE
 )
+
+
 mtext(side=3, line=-1, text=paste0("all datasets - n= ", length(unique(nSignif_dt$dataset))))
 # mtext(side=1, col = labcols, text = nSignif_dt$dataset, at= 1:nrow(nSignif_dt), las=2, cex =0.5)
 axis(2, col = tad_col, col.ticks = tad_col, col.axis=tad_col, at=seq(from=0, to = maxTADs, by=10))
 axis(1, labels=F, lwd.ticks = -1)
-mtext(side=1, col = labcols, text = rep("\u25CF", nrow(nSignif_dt)), at= 1:nrow(nSignif_dt), las=2, cex = 1.2)
+mtext(side=1, col = labcols, text = rep(dotSymb, nrow(nSignif_dt)), at= 1:nrow(nSignif_dt), las=2, cex = 1.2)
 par(new = T, family=fontFamily)
 plot(
   x = 1:nrow(nSignif_dt),
@@ -87,10 +90,24 @@ mtext(side = 4, line = 3, '# signif. genes', col=gene_col,  cex=plotCex)
 greycol <- "grey"
 abline(v=1:nrow(nSignif_dt), lty=3, col = greycol)
 
+# mtext(side = 1, line = -2, 
+#       text = paste0(dotSymb, " ", names(all_cols)),
+#       col=all_cols, cex=plotCex)
+
+legend("bottom", 
+       # legend = paste0(dotSymb, " ", names(all_cols)),
+       legend = paste0(names(all_cols)),
+       col=all_cols,
+       pch=16,
+       # lty=c(1,2),
+       horiz=TRUE,
+       inset=c(0,-0.2),
+       cex = plotCex,
+       xpd=TRUE, bty="n"
+)
+
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
-
-
 
 
 outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withLeg.", plotType))
@@ -137,6 +154,11 @@ mtext(side = 4, line = 3, '# signif. genes', col=gene_col, cex=plotCex)
 # greycol <-  "#BEBEBE19"
 greycol <- "grey"
 abline(v=1:nrow(nSignif_dt), lty=3, col = greycol)
+
+
+mtext(side = 1, line = -2, 
+      text = paste0(dotSymb, " ", names(all_cols)),
+      col=all_cols, cex=plotCex)
 
 
 foo <- dev.off()

@@ -9,10 +9,16 @@ require(VennDiagram)
 
 source("../Cancer_HiC_data_TAD_DA/utils_fct.R")
 
-# Rscript geneRank_tadRank.R
+# Rscript geneRank_tadRank.R ENCSR489OCU_NCI-H460_40kb TCGAlusc_norm_lusc
+# Rscript geneRank_tadRank.R ENCSR489OCU_NCI-H460_40kb TCGAluad_norm_luad
 
 outFolder <- file.path("GENERANK_TADRANK")
 dir.create(outFolder, recursive = TRUE)
+
+args <- commandArgs(trailingOnly = TRUE)
+stopifnot(length(args) == 2)
+hicds <- args[1]
+exprds <- args[2]
 
 inDT <- get(load("../v2_Yuanlong_Cancer_HiC_data_TAD_DA/GENE_RANK_TAD_RANK/all_gene_tad_signif_dt.Rdata"))
 
@@ -62,7 +68,8 @@ densplot(
   main =  paste0(hicds, " - ", exprds),
   cex = 0.7,
   cex.lab=plotCex,
-  cex.axis=plotCex
+  cex.axis=plotCex,
+  cex.main=1
 )
 mtext(side=3, text = paste0("# genes = ", nrow(ds_dt)))
 
@@ -159,7 +166,8 @@ plot(NULL,
   xlim = c(geneBar_pos-axisOffset, tadBar_pos+axisOffset),
   ylim = c(-axisOffset, 1+axisOffset)
 )
-mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex)
+# mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex)
+mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex-0.2)
 
 segments(x0=geneBar_pos,
          x1=tadBar_pos,
@@ -251,7 +259,8 @@ plot(NULL,
      xlim = c(geneBar_pos-axisOffset, tadBar_pos+axisOffset),
      ylim = c(-axisOffset, 1+axisOffset)
 )
-mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex)
+# mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex)
+mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex-0.2)
 
 segments(x0=geneBar_pos,
          x1=tadBar_pos,
@@ -334,7 +343,7 @@ require(ggsci)
 vd <- venn.diagram(
   x = list(signif_genes, signif_tads),
   main = paste0("# signif. genes"),
-  sub = paste0(hicds, " - ", exprds),
+  sub = paste0(hicds, "\n", exprds),
   category.names = c(paste0("signif. gene-level\n(", nSignif_genesOnly+nSignif_genesAndTADs, ")") , paste0("signif. TAD level\n(", nSignif_tadsOnly+nSignif_genesAndTADs, ")")),
   
   fontfamily="Hershey",

@@ -1,5 +1,6 @@
-hicds <- "LG1_40kb"
+hicds <- "ENCSR489OCU_NCI-H460_40kb"
 exprds <- "TCGAluad_norm_luad"
+# exprds <- "TCGAlusc_norm_lusc"
 
 plotType <- "png"
 
@@ -9,7 +10,12 @@ require(ggsci)
 
 source("../Cancer_HiC_data_TAD_DA/utils_fct.R")
 
-# Rscript FCC_fract_pie_ds.R
+# Rscript FCC_fract_pie_ds.R ENCSR489OCU_NCI-H460_40kb TCGAluad_norm_luad
+
+args <- commandArgs(trailingOnly = TRUE)
+stopifnot(length(args) == 2)
+hicds <- args[1]
+exprds <- args[2]
 
 outFolder <- file.path("FCC_FRACT_PIE_DS")
 dir.create(outFolder, recursive = TRUE)
@@ -22,6 +28,8 @@ ds_dt$pct_lab <- paste0(round(ds_dt$pct, 2), " %")
 ds_dt$pct_lab_gg <- paste0(round(ds_dt$pct, 2), " %")
 ds_dt$pct_lab_gg[ds_dt$pct < 1] <- ""
 ds_dt$labs1 <- paste0(ds_dt$intervalFCC, "\n",ds_dt$pct_lab)
+ds_dt$labs2 <- ds_dt$labs1
+ds_dt$labs2[ds_dt$pct<0.5] <- ""
 ds_dt$labs <- paste0(ds_dt$intervalFCC, " (",ds_dt$pct_lab, ")")
 ds_dt$labs <- gsub("FCC", "", ds_dt$labs)
 ds_dt$labs <- factor(ds_dt$labs, levels = rev(as.character(ds_dt$labs)))
@@ -32,15 +40,22 @@ mycols <- eval(parse(text = paste0("pal_", ggsci_pal, "(", ggsci_subpal, ")")))(
 
 
 outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_FCCfract_pie_withLab.", plotType))
-do.call(plotType, list(outFile, height=myHeight*2, width=myWidth*2.5))
+do.call(plotType, list(outFile, height=myHeight*2.2, width=myWidth*2.5))
 par(family=fontFamily)
-pie(x=ds_dt$pct,labels = ds_dt$labs1, col=mycols,
-    cex=plotCex,
+pie(x=ds_dt$pct,
+    # labels = ds_dt$labs1, 
+    labels = ds_dt$labs2, 
+    col=mycols,
+    # cex=plotCex,
+    cex=2,
     cex.main=2,
     main=paste0("TAD FCC fract."))
-mtext(side=3, text = paste0(hicds, " - ", exprds), cex=plotCex)
+mtext(side=3, text = paste0(hicds, " - ", exprds), cex=plotCex, line=-1)
+# mtext(side=3, text = paste0(hicds, " - ", exprds), cex=plotCex)
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
+
+# stop("ok")
 
 ds_dt$labs_2 <- as.character(ds_dt$pct_lab)
 ds_dt$labs_2[ds_dt$pct < 1] <- ""
@@ -50,20 +65,21 @@ do.call(plotType, list(outFile, height=myHeight*2, width=myWidth*2))
 par(family=fontFamily)
 pie(x=ds_dt$pct,labels = ds_dt$labs_2, col=mycols,
     cex.main=2,
-    cex  =plotCex,
+    # cex  =plotCex,
+    cex  =2,
     main=paste0("TAD FCC fract."))
 legend(
   "bottomright",
   legend = rev(ds_dt$labs),
   pch=15,
   col = mycols,
+  cex=1.2,
   # horiz=TRUE
   bty="n"
 )
-mtext(side=3, text = paste0(hicds, " - ", exprds), cex=plotCex)
+mtext(side=3, text = paste0(hicds, " - ", exprds), cex=plotCex, line=-1)
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
-
 
 
 pie_fract <- ggplot(ds_dt, aes(x="", y=pct, fill=labs))+ 

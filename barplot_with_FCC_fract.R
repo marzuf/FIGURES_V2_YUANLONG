@@ -19,15 +19,17 @@ source("settings.R")
 outFolder <- "BARPLOT_WITH_FCC_FRACT"
 dir.create(outFolder, recursive = TRUE)
 
-buildData <- FALSE
+buildData <- TRUE
 
 fcc_fract <- seq(from=-1, to=1, by=0.25)
 # fcc_fract_names <- paste0("FCC > ", fcc_fract[1:(length(fcc_fract)-1)], " and FCC <= ",fcc_fract[2:length(fcc_fract)])
 fcc_fract_names <- paste0("FCC \u2208 ]", fcc_fract[1:(length(fcc_fract)-1)], ", ",fcc_fract[2:length(fcc_fract)], "]")
 fcc_fract_names <- paste0("]", fcc_fract[1:(length(fcc_fract)-1)], ", ",fcc_fract[2:length(fcc_fract)], "]")
 
+fcc_fract_names[fcc_fract_names == "]-1, -0.75]"] <- "[-1, -0.75]"
 
-fract_sort <- "FCC > 0.75 and FCC <= 1"
+
+# fract_sort <- "FCC > 0.75 and FCC <= 1"
 fract_sort <- fcc_fract_names[length(fcc_fract_names)]
 
 labsymbol <- "\u25CF"
@@ -35,10 +37,11 @@ labsymbol <- "\u25CF"
 ggsci_pal <- "lancet"
 ggsci_subpal <- ""
 
-legTitle <- "FCC ranges"
+legTitle <- "FCC ranges:"
 fractBarSubTitle <- "AUC ratios:\n"
 fractBarTitle <- "Fold-change concordance scores"
 
+plotMargin <- c(1,2,1,1)
 
 auc_ratio_file <- file.path("BARPLOT_FCC_AUC_RATIO", "all_dt.Rdata")
 stopifnot(file.exists(auc_ratio_file))
@@ -111,8 +114,13 @@ if(fcc_auc_sort) {
 
 nDS <- length(unique(all_dt$dataset))
 
+myds <- as.character(unique(file.path(all_dt$hicds, all_dt$exprds)))
+countCmp <- setNames(as.numeric(table(all_cmps[basename(myds) ])), names(table(all_cmps[basename(myds) ])))
+
 legDT <- data.frame(cmpType = names(all_cols), cmpColor = as.character(all_cols))
 legDT <- legDT[rev(order(legDT$cmpType)),]
+legDT$count <- countCmp[legDT$cmpType]
+legDT$legLabel <- paste0(legDT$cmpType, " (", legDT$count, ")")
 
 mycols <- all_cols[all_cmps[exprds_order]]
 # tmp_dt <- aggregate(countFCC~ intervalFCC, data=all_dt, FUN=sum) # none has zero
@@ -135,6 +143,7 @@ fract_plot_with_lab <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFC
   eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
   eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
   theme( # Increase size of axis lines
+    plot.margin = unit(plotMargin, "lines"), # top, right, bottom, and left 
     plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
     plot.subtitle = element_text(hjust = 0, vjust=2,face = "italic", size =8, family=fontFamily, lineheight = 1.75),
     panel.grid = element_blank(),
@@ -164,7 +173,7 @@ fract_plot_with_lab <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFC
     # legend.margin = margin(6, 6, 6, 6),
     legend.justification = c("right", "top")
   )+ 
-  geom_text(data=legDT, aes(label = legDT$cmpType, x = 59, y =c(0, 0.05, 0.1)),
+  geom_text(data=legDT, aes(label = legDT$legLabel, x = 59, y =c(0, 0.05, 0.1)),
             vjust = 0, hjust=0,
             inherit.aes = FALSE, color = legDT$cmpColor)
 
@@ -184,7 +193,7 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
   ggtitle(paste0(fractBarTitle), 
           subtitle = "AUC ratios:\n")+
           # subtitle = "(all datasets)")+
-  labs(fill="FCC range")+
+  labs(fill=legTitle)+
   guides(color=FALSE)+
   eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
   eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
@@ -194,6 +203,7 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
                      labels = seq(from=0, to=1, by=0.1))+
   scale_x_discrete(labels=all_dt$labSymb, name=paste0("(all datasets - n=", nDS, ")"))+
   theme( # Increase size of axis lines
+    plot.margin = unit(plotMargin, "lines"), # top, right, bottom, and left 
     plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
     plot.subtitle = element_text(hjust = 0, vjust=2, face = "italic", size = 8, family=fontFamily, lineheight = 1.75),
     panel.grid = element_blank(),
@@ -222,7 +232,7 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
     # legend.margin = margin(6, 6, 6, 6),
     legend.justification = c("right", "top")
   ) + 
-  geom_text(data=legDT, aes(label = paste0(labsymbol, " ", legDT$cmpType), x = 59, y =c(0, 0.05, 0.1)),
+  geom_text(data=legDT, aes(label = paste0(labsymbol, " ", legDT$legLabel), x = 59, y =c(0, 0.05, 0.1)),
             vjust = 0, hjust=0,
             inherit.aes = FALSE, color = legDT$cmpColor)
 
@@ -258,13 +268,13 @@ scatPlot <- ggscatter(auc_fract_ratio_dt,
                       xlab = "FCC AUC ratio",
                       ylab = "Ratio of TADs",
                       palette = myPals)+
-  labs(color="FCC range:")+
+  labs(color=legTitle)+
   geom_smooth(aes(color = intervalFCC),method = "lm", linetype=2, se=F)+
   theme( # Increase size of axis lines
     plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
     plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
     axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
-    axis.text.x = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color="black", hjust=0.5,vjust = 1, size=12, family=fontFamily),
     axis.title.y = element_text(color="black", size=14, family=fontFamily),
     axis.title.x = element_text(color="black", size=14, family=fontFamily),
     panel.border = element_blank(),
@@ -314,14 +324,13 @@ scatPlot <- ggscatter(auc_fract_signif_dt,
                       xlab = paste0("# signif. TADs (p-val <= ", signifTADthresh, ")"),
                       ylab = "Ratio of TADs",
                       palette = myPals)+
-  labs(color="FCC range:")+
+  labs(color=legTitle)+
   geom_smooth(aes(color = intervalFCC),method = "lm", linetype=2, se=F)+
   theme( # Increase size of axis lines
     plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
     plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
     axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
-    axis.text.x = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
-    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(color="black", hjust=0.5,vjust =1, size=12, family=fontFamily),
     axis.title.y = element_text(color="black", size=14, family=fontFamily),
     axis.title.x = element_text(color="black", size=14, family=fontFamily),
     panel.border = element_blank(),

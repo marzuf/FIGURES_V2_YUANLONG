@@ -4,7 +4,8 @@ options(scipen=100)
 
 startTime <- Sys.time()
 
-# Rscript fcc_wave_plot.R LG1_40kb TCGAluad_norm_luad
+# Rscript fcc_wave_plot.R ENCSR489OCU_NCI-H460_40kb TCGAlusc_norm_lusc
+# Rscript fcc_wave_plot.R ENCSR489OCU_NCI-H460_40kb TCGAluad_norm_luad
 ################################################################################
 
 SSHFS <- F
@@ -18,7 +19,6 @@ plotCex <- 1.4
 
 require(flux)
 
-
 # set colors:
 polygonPermutCol <- rgb(188/255,188/255,188/255, 0.3)
 meanPermutCol <- rgb(135/255,135/255,135/255, 0.3)
@@ -27,9 +27,6 @@ qt95PermutCol <- rgb(140/255,140/255,140/255)
 lwdObs <- 1.2
 colObs <- "darkred"
 pointObsCol <- colObs
-
-
-
 
 args <- commandArgs(trailingOnly = TRUE)
 stopifnot(length(args) == 2)
@@ -162,9 +159,10 @@ filter_permut_currDown_half <- filter_permut_currDown
 
 # PLOT THE 1ST PLOT
 
-outFile <- paste0(outFolder, "/", curr_ratio_type, "_departure05_cumsum_obs_permut.", plotType)
+outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_genomeWide_FCC_cumsum_obs_permut.", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth))
 
+par(bty="l")
 
 my_main <- paste0("Genome-wide intra-TAD fold-change concordance")
 my_sub <- paste0(hicds, " - " , exprds)
