@@ -88,7 +88,6 @@ toplot_dt <- toplot_dt[order(toplot_dt$start, toplot_dt$end),]
 stopifnot(toplot_dt$entrezID %in% geneList)
 plot_geneList <- geneList[geneList %in% toplot_dt$entrezID]
 
-
 count_file <- file.path(pipFolder, hicds, exprds, "1_runGeneDE", "DE_rnaseqDT.Rdata")
 stopifnot(file.exists(count_file))
 fpkm_dt <- get(load(count_file))

@@ -27,7 +27,6 @@ myHeight <- ifelse(plotType == "png", 480 , 7)
 myWidth <- ifelse(plotType == "png", 600, 10)
 plotCex <- 1.4
 
-
 require(flux)
 
 # set colors:

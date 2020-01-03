@@ -12,7 +12,6 @@ registerDoMC(40)
 
 source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
 
-
 outFolder <- file.path("BARPLOT_ENRICHGO_SIGNIFCONSERV")
 dir.create(outFolder, recursive = TRUE)
 
@@ -25,11 +24,18 @@ hicds="Panc1_rep12_40kb"
 exprds="TCGApaad_wt_mutKRAS"
 
 plotType <- "svg"
+source("settings.R")
+
 myHeightGG <- 7
 myWidthGG <- 10
 myHeight <- ifelse(plotType == "png", 300, 7)
 myWidth <- myHeight
 axisCex <- 1.4
+mainCex <- 1.4
+subCex <- 1.2
+
+namesCex <- 0.8
+namesWdth <- 25
 
 padjVarGO <- "p.adjust" # p.adjust or qvalue ???
 
@@ -50,14 +56,21 @@ if(length(args) == 3) {
 }
 
 
+newTitNames <- c("limma_signif_GO" = "Enrich. GO from limma signif. genes",
+                 "tad_signif_GO" = "Enrich. GO from TAD signif. genes",
+                 "limma_signif_enrich" = "Enrich. GO from limma signif. genes",
+                 "tad_signif_enrich" = "Enrich. GO from TAD signif. genes")
+
+newSubNames <- c("limma_signif_GO" = paste0("(genes signif. thresh = ", gene_pvalThresh, ")"),
+                 "tad_signif_GO" = paste0("(TAD signif. thresh = ", TAD_pvalThresh, ")"),
+                 "limma_signif_enrich" = paste0("(genes signif. thresh = ", gene_pvalThresh, ")"),
+                 "tad_signif_enrich" = paste0("(TAD signif. thresh = ", TAD_pvalThresh, ")"))
 
 setDir <- "/media/electron"
 setDir <- ""
 
-
 inFile <- file.path("..", "v2_Yuanlong_Cancer_HiC_data_TAD_DA","GO_SIGNIF_GENELEVEL_TADLEVEL_INTERSECTDIFF", paste0("tadPvalThresh", TAD_pvalThresh, "_genePvalThresh", gene_pvalThresh), "all_go_enrich_list.Rdata")
 all_go_enrich_list <- get(load(inFile))
-
 
 signif_go_pvalThresh <- -log10(0.05)
 
@@ -85,20 +98,30 @@ all_types_signifGO <- foreach(dt = all_dt) %do% {
   go_categories <- unlist(all_go_categories)
   go_categories_count <- setNames(as.numeric(table(go_categories)), names(table(go_categories)))
   go_categories_count <- sort(go_categories_count, decreasing = TRUE)
+  
+  titPrefix <- newTitNames[gsub("_resultDT", "", dt)]
+  barLabs <- gsub("_", " ", gsub("GO_", "", names(go_categories_count[1:topCommonBars])))
+  barLabs <- sapply(barLabs, function(x) paste(strwrap(x, width = namesWdth), collapse="\n"))
+    
   outFile <- file.path(outFolder,paste0("all_ds_", dt, "_intersect_",padjVarGO, "_barplot", ".", plotType))
   do.call(plotType, list(outFile, height = myHeight*1.2, width = myWidth*1.2))    
   par(oma=c(10,1,1,1))
-  barplot(go_categories_count[1:topCommonBars], las=2, 
+  barplot(go_categories_count[1:topCommonBars],
+          las=2, 
           col = barcol,
           ylab="# of datasets",
-          names.arg=gsub("GO_", "", names(go_categories_count[1:topCommonBars])),
-          main=paste0(gsub("_resultDT", "", dt), " - intersect across DS"),
+          names.arg=barLabs,
+          # main=paste0(titPrefix, " - intersect across DS"),
+          main=paste0(titPrefix),
+          # sub = newSubNames[paste0(gsub("_resultDT", "", dt))],
           cex.lab=axisCex,
           cex.axis=axisCex,
-          cex.names=0.6
+          cex.main = mainCex,
+          cex.names=namesCex
   )
-  
-  mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+  legend("topright", bty="n", legend = newSubNames[paste0(gsub("_resultDT", "", dt))], text.font=3)
+  # mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+  mtext(side=3, text=paste0(padjVarGO, " <= ",padjVarGO_plotThresh, " (top ", topCommonBars, ")"), cex=subCex)
   foo <- dev.off()
   cat(paste0("... written: ", outFile, "\n"))
   
@@ -136,19 +159,30 @@ if(cmpType == "") {
       go_categories <- unlist(all_go_categories)
       go_categories_count <- setNames(as.numeric(table(go_categories)), names(table(go_categories)))
       go_categories_count <- sort(go_categories_count, decreasing = TRUE)
+      
+      titPrefix <- newTitNames[gsub("_resultDT", "", dt)]
+      
+      barLabs <- gsub("_", " ", gsub("GO_", "", names(go_categories_count[1:topCommonBars])))
+      barLabs <- sapply(barLabs, function(x) paste(strwrap(x, width = namesWdth), collapse="\n"))
+      
       outFile <- file.path(outFolder,paste0("all_ds_",cmp, "_", dt, "_intersect_",padjVarGO, "_barplot", ".", plotType))
       do.call(plotType, list(outFile, height = myHeight*1.2, width = myWidth*1.2))    
       par(oma=c(10,1,1,1))
       barplot(go_categories_count[1:topCommonBars], las=2, 
               col = barcol,
-              names.arg=gsub("GO_", "", names(go_categories_count[1:topCommonBars])),
+              names.arg=barLabs,
               ylab="# of datasets",
-              main=paste0(gsub("_resultDT", "", dt), " - ", cmp),
-              cex.names=0.6,
+              # main=paste0(titPrefix, " - ", cmp),
+              main=paste0(titPrefix),
+              # sub = newSubNames[paste0(gsub("_resultDT", "", dt))],
+              cex.names=namesCex,
+              cex.main = mainCex,
               cex.axis=axisCex,
               cex.lab = axisCex
       )
-      mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+      legend("topright", bty="n", legend = newSubNames[paste0(gsub("_resultDT", "", dt))], text.font=3)
+      # mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+      mtext(side=3, text=paste0(cmp, " - ", padjVarGO, " <= ",padjVarGO_plotThresh, " (top ", topCommonBars, ")"), cex = subCex)
       foo <- dev.off()
       cat(paste0("... written: ", outFile, "\n"))
       
@@ -173,8 +207,6 @@ stopifnot(setequal(names(all_types_signifGO[[1]]), names(all_types_signifGO[[2]]
 # "tad_signif_enrich_resultDT",
 # "limma_signif_enrich_resultDT",
 # "intersect_signif_enrich_resultDT"
-
-
 
 all_ds_GOtypes_dt <- foreach(ds = all_ds, .combine='rbind') %dopar% {
   
@@ -212,19 +244,30 @@ for(gotype in unique(all_ds_GOtypes_dt_countDS$GO_type)) {
   go_categories_count <- setNames(sub_dt$dataset, sub_dt$GO_term)
   
   go_categories_count <- sort(go_categories_count, decreasing = TRUE)
+  
+  titPrefix <- newTitNames[paste0(gotype)]
+  
+  barLabs <- gsub("_", " " , gsub("GO_", "", names(go_categories_count[1:topCommonBars])))
+  barLabs <- sapply(barLabs, function(x) paste(strwrap(x, width = namesWdth), collapse="\n"))
+
   outFile <- file.path(outFolder,paste0("all_ds_count","_", gotype, "_", padjVarGO, "_barplot", ".", plotType))
   do.call(plotType, list(outFile, height = myHeight*1.2, width = myWidth*1.2))    
   par(oma=c(10,1,1,1))
   barplot(go_categories_count[1:topCommonBars], las=2, 
           col = barcol,
-          names.arg=gsub("GO_", "", names(go_categories_count[1:topCommonBars])),
+          names.arg=barLabs,
           ylab="# of datasets",
-          main=paste0(gotype),
-          cex.names=0.6,
+          # main=paste0(gotype),
+          main=paste0(titPrefix),
+          # sub = newSubNames[paste0(gotype)],
+          cex.names=namesCex,
+          cex.main = mainCex,
           cex.axis=axisCex,
           cex.lab=axisCex
   )
-  mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+  legend("topright", bty="n", legend = newSubNames[paste0(gotype)], text.font=3)
+  # mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+  mtext(side=3, text=paste0(padjVarGO, " <= ",padjVarGO_plotThresh, " (top ", topCommonBars, ")"), cex = subCex)
   foo <- dev.off()
   cat(paste0("... written: ", outFile, "\n"))
 }
@@ -306,19 +349,30 @@ if(cmpType == "") {
       go_categories_count <- setNames(sub_dt$dataset, sub_dt$GO_term)
       
       go_categories_count <- sort(go_categories_count, decreasing = TRUE)
+      
+      titPrefix <- newTitNames[paste0(gotype)]
+      
+      barLabs <- gsub("_", " ", gsub("GO_", "", names(go_categories_count[1:topCommonBars])))
+      barLabs <- sapply(barLabs, function(x) paste(strwrap(x, width = namesWdth), collapse="\n"))
+      
       outFile <- file.path(outFolder,paste0("all_ds_count","_",cmp, "_",  gotype, "_", padjVarGO, "_barplot", ".", plotType))
       do.call(plotType, list(outFile, height = myHeight*1.2, width = myWidth*1.2))    
       par(oma=c(10,1,1,1))
       barplot(go_categories_count[1:topCommonBars], las=2, 
               col = barcol,
-              names.arg=gsub("GO_", "", names(go_categories_count[1:topCommonBars])),
+              names.arg=barLabs,
               ylab="# of datasets",
-              main=paste0(gotype, " - ", cmp),
-              cex.names=0.6,
+              # main=paste0(gotype, " - ", cmp),
+              main=paste0(titPrefix),
+              # sub = newSubNames[paste0(gotype)],
+              cex.names=namesCex,
+              cex.main = mainCex,
               cex.axis=axisCex,
               cex.lab=axisCex
       )
-      mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+      legend("topright", bty="n", legend = newSubNames[paste0(gotype)], text.font=3)
+      # mtext(side=3, text=paste0(padjVarGO, "<=",padjVarGO_plotThresh, " (top ", topCommonBars, ")"))
+      mtext(side=3, text=paste0(cmp, " - ", padjVarGO, " <= ",padjVarGO_plotThresh, " (top ", topCommonBars, ")"), cex=subCex)
       foo <- dev.off()
       cat(paste0("... written: ", outFile, "\n"))
     }
@@ -337,7 +391,6 @@ if(cmpType == "") {
     
     cmp_all_ds_GOtypes_dt_ic$GO_type[cmp_all_ds_GOtypes_dt_ic$GO_type == "tad_signif_GO"] <- "gene level signif."
     cmp_all_ds_GOtypes_dt_ic$GO_type[cmp_all_ds_GOtypes_dt_ic$GO_type == "limma_signif_GO"] <- "TAD level signif."
-    
     
     p <- ggdensity(cmp_all_ds_GOtypes_dt_ic, 
                    # title = paste0("enriched GO IC - ", cmp),
