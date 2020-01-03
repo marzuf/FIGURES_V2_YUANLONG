@@ -244,6 +244,72 @@ outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withSymb_barplot
 ggsave(plot = fract_plot_with_symb, filename = outFile, height=myHeightGG, width = myWidthGG*2)
 cat(paste0("... written: ", outFile, "\n"))
 
+save(all_dt, file="all_dt.Rdata", version=2)
+
+tmp <- all_dt[as.character(all_dt$intervalFCC) == "]0.75, 1]",]
+tmp <- tmp[order(tmp$countFCC, decreasing = TRUE),]
+
+all_dt$dataset <- factor(all_dt$dataset, levels=tmp$dataset)
+
+fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFCC, color=intervalFCC)) + 
+  geom_bar(position="stack", stat="identity") +
+  # coord_cartesian(expand = FALSE) +
+  coord_cartesian(clip = 'off', expand=FALSE) +
+  ggtitle(paste0(fractBarTitle), 
+          subtitle = "AUC ratios:\n")+
+  # subtitle = "(all datasets)")+
+  labs(fill=legTitle)+
+  guides(color=FALSE)+
+  eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  scale_y_continuous(name=paste0("Fraction of TADs"),
+                     limits = c(0,1), 
+                     breaks = seq(from=0, to=1, by=0.1),
+                     labels = seq(from=0, to=1, by=0.1))+
+  scale_x_discrete(labels=all_dt$labSymb, name=paste0("(all datasets - n=", nDS, ")"))+
+  theme( # Increase size of axis lines
+    plot.margin = unit(plotMargin, "lines"), # top, right, bottom, and left 
+    plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0, vjust=2, face = "italic", size = 8, family=fontFamily, lineheight = 1.75),
+    panel.grid = element_blank(),
+    # panel.grid.major.y = element_line(colour = "grey"),
+    # panel.grid.minor.y = element_line(colour = "grey"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.line.x = element_line(size = .2, color = "black"),
+    axis.line.y = element_line(size = .2, color = "black"),
+    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color=mycols, hjust=1,vjust = 0.5, size=12, angle=90, family=fontFamily),
+    axis.title.y = element_text(color="black", size=14, family=fontFamily),
+    axis.title.x = element_text(color="black", size=14, family=fontFamily),
+    panel.border = element_blank(),
+    panel.background = element_rect(fill = "transparent"),
+    legend.background =  element_rect(),
+    legend.key = element_blank(),
+    legend.title = element_text(face="bold", family=fontFamily)
+  )+
+  geom_text(data=x, aes(x = x$dataset, y=1, 
+                        label=sprintf("%.2f", x$fcc_auc)),
+            inherit.aes=FALSE, angle=90, size=3, vjust=0.5, hjust=0) +
+  theme(
+    # legend.position = c(.95, .95),
+    # legend.box.just = "right",
+    # legend.margin = margin(6, 6, 6, 6),
+    legend.justification = c("right", "top")
+  ) + 
+  geom_text(data=legDT, aes(label = paste0(labsymbol, " ", legDT$legLabel), x = 59, y =c(0, 0.05, 0.1)),
+            vjust = 0, hjust=0,
+            inherit.aes = FALSE, color = legDT$cmpColor)
+
+
+
+outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withSymb_fractSorted_barplot.", plotType))
+ggsave(plot = fract_plot_with_symb, filename = outFile, height=myHeightGG, width = myWidthGG*2)
+cat(paste0("... written: ", outFile, "\n"))
+
+
+
+
 ######################################################################################
 # FRACT and FCC AUC
 ######################################################################################
