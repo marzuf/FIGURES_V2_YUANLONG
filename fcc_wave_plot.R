@@ -6,6 +6,17 @@ startTime <- Sys.time()
 
 # Rscript fcc_wave_plot.R ENCSR489OCU_NCI-H460_40kb TCGAlusc_norm_lusc
 # Rscript fcc_wave_plot.R ENCSR489OCU_NCI-H460_40kb TCGAluad_norm_luad
+# FCC AUC top1                           LG1_40kb      TCGAluad_mutKRAS_mutEGFR 1.531834
+# FCC AUC top12             ENCSR079VIJ_G401_40kb            TCGAkich_norm_kich 1.425827
+# FCC AUC top32              GSE105381_HepG2_40kb         TCGAlihc_wt_mutCTNNB1 1.280421
+# FCC AUC top58         ENCSR312KHQ_SK-MEL-5_40kb       TCGAskcm_lowInf_highInf 1.160567
+
+
+# Rscript fcc_wave_plot.R LG1_40kb TCGAluad_mutKRAS_mutEGFR
+# Rscript fcc_wave_plot.R ENCSR079VIJ_G401_40kb TCGAkich_norm_kich
+# Rscript fcc_wave_plot.R GSE105381_HepG2_40kb TCGAlihc_wt_mutCTNNB1
+# Rscript fcc_wave_plot.R ENCSR312KHQ_SK-MEL-5_40kb TCGAskcm_lowInf_highInf
+
 ################################################################################
 
 SSHFS <- F

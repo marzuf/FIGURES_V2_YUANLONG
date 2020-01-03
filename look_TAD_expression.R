@@ -10,18 +10,26 @@ suppressPackageStartupMessages(library(doMC, warn.conflicts = FALSE, quietly = T
 suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE, quietly = TRUE, verbose = FALSE))
 suppressPackageStartupMessages(library(ggpubr, warn.conflicts = FALSE, quietly = TRUE, verbose = FALSE))
 suppressPackageStartupMessages(library(reshape2, warn.conflicts = FALSE, quietly = TRUE, verbose = FALSE))
-
+require(ggsci)
+ggsci_pal <- "d3"
+ggsci_subpal <- ""
 require(reshape2)
 log10_offset <- 0.01
 
 
 # Rscript look_TAD_expression.R <hicds> <exprds> <gene_symbol>
-# Rscript look_TAD_expression.R ENCSR489OCU_NCI-H460_40kb TCGAlusc_norm_lusc chr11_TAD390
+# Rscript look_TAD_expression.R ENCSR489OCU_NCI-H460_40kb TCGAlusc_norm_lusc chr11_TAD390 # MMPP
+# Rscript look_TAD_expression.R ENCSR489OCU_NCI-H460_40kb TCGAlusc_norm_lusc chr10_TAD268 # SFTPA
 
 
 hicds="ENCSR489OCU_NCI-H460_40kb"
 exprds="TCGAlusc_norm_lusc"
 tad_to_plot="chr11_TAD390"
+
+col1 <- pal_futurama()(5)[1]
+col2 <- pal_futurama()(5)[5]
+col1 <- pal_aaas()(5)[4]
+col2 <- pal_npg()(5)[5]
 
 args <- commandArgs(trailingOnly = TRUE)
 stopifnot(length(args) >= 3)
@@ -117,9 +125,7 @@ withRank_toplot_dt <- do.call(rbind, by(toplot_dt, list(toplot_dt$symbol, toplot
   dt
 }))
 
-require(ggsci)
-ggsci_pal <- "d3"
-ggsci_subpal <- ""
+
 # p_var <-  ggplot(withRank_toplot_dt, aes(x = samp_rank, y = value_log10, fill = cond)) + 
 #   geom_point()+
 #   # geom_boxplot()+
@@ -180,14 +186,18 @@ p_var <-  ggplot(withRank_toplot_dt2, aes(x = samp_rank, y = value_log10, fill =
   geom_point()+
   # geom_boxplot()+
   facet_grid(~symbol, switch="x") + 
-  coord_cartesian(expand = FALSE) +
+  # coord_cartesian(expand = FALSE) +
   ggtitle(paste0(hicds, " - ", exprds), subtitle = paste0(tad_to_plot))+
-  scale_x_discrete(name=my_xlab)+
+  scale_x_discrete(name=my_xlab, expand = c(0.1,0.1))+
   scale_y_continuous(name=paste0(my_ylab),
                      breaks = scales::pretty_breaks(n = 20))+
   
-  eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
-  eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  # eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  # eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  # 
+  scale_color_manual(values=c(col1, col2))+
+  scale_fill_manual(values=c(col1, col2))+
+  
   
   labs(fill  = paste0(""), color=paste0("")) +
   theme( 
@@ -198,7 +208,7 @@ p_var <-  ggplot(withRank_toplot_dt2, aes(x = samp_rank, y = value_log10, fill =
     panel.grid.major.y = element_line(colour = "grey"),
     panel.grid.minor.y = element_line(colour = "grey"),
     strip.text.x = element_text(size = 10),
-    axis.line.x = element_line(size = .2, color = "black"),
+    # axis.line.x = element_line(size = .2, color = "black"),
     axis.line.y = element_line(size = .2, color = "black"),
     axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12),
     axis.text.x = element_blank(),
@@ -217,19 +227,23 @@ outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_", tad_to_plot, "_a
 ggsave(plot = p_var, filename = outFile, height=myHeightGG, width = myWidthGG)
 cat(paste0("... written: ", outFile, "\n"))
 
+# stop("--ok\n")
+
 
 p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = samp_rank, y = value_log10, fill = cond)) + 
   # geom_point()+
   geom_boxplot()+
   facet_grid(~symbol, switch="x") + 
-  coord_cartesian(expand = FALSE) +
+  # coord_cartesian(expand = FALSE) +
   ggtitle(paste0(hicds, " - ", exprds), subtitle = paste0(tad_to_plot))+
   scale_x_discrete(name=my_xlab)+
   scale_y_continuous(name=paste0(my_ylab),
                      breaks = scales::pretty_breaks(n = 20))+
   
-  eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
-  eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  # eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  # eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  scale_color_manual(values=c(col1, col2))+
+  scale_fill_manual(values=c(col1, col2))+
   
   labs(fill  = paste0(""), color=paste0("")) +
   theme( 
@@ -267,14 +281,17 @@ p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = samp_rank, y = value_log10
   # geom_point()+
   geom_violin()+
   facet_grid(~symbol, switch="x") + 
-  coord_cartesian(expand = FALSE) +
+  # coord_cartesian(expand = FALSE) +
   ggtitle(paste0(hicds, " - ", exprds), subtitle = paste0(tad_to_plot))+
   scale_x_discrete(name=my_xlab)+
   scale_y_continuous(name=paste0(my_ylab),
                      breaks = scales::pretty_breaks(n = 20))+
   
-  eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
-  eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  # eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  # eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  
+  scale_color_manual(values=c(col1, col2))+
+  scale_fill_manual(values=c(col1, col2))+
   
   labs(fill  = paste0(""), color=paste0("")) +
   theme( 
