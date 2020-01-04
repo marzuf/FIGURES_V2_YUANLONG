@@ -111,6 +111,9 @@ if(fcc_auc_sort) {
   all_dt$dataset <- factor(all_dt$dataset, levels=ds_order)
   stopifnot(!is.na(all_dt$dataset))
 }
+tmp1 <- all_dt
+tmp1 <- tmp1[as.numeric(tmp1$dataset),]
+exprds_order <- as.character(tmp1$exprds[tmp1$intervalFCC == fract_sort])
 
 nDS <- length(unique(all_dt$dataset))
 

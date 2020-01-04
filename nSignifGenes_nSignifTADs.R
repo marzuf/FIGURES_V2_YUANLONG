@@ -1,5 +1,5 @@
 
-plotType <- "png"
+plotType <- "svg"
 
 
 source("../Cancer_HiC_data_TAD_DA/utils_fct.R")

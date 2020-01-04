@@ -38,6 +38,7 @@ exprds <- args[2]
 tad_to_plot <- args[3]
 
 inDT <- get(load("../v2_Yuanlong_Cancer_HiC_data_TAD_DA/GENE_RANK_TAD_RANK/all_gene_tad_signif_dt.Rdata"))
+inDT <- inDT[inDT$hicds == hicds & inDT$exprds == exprds,]
 
 tad_plot_rank <- unique(inDT$tad_rank[inDT$hicds == hicds & inDT$exprds == exprds & inDT$region == tad_to_plot])
 stopifnot(!is.na(tad_plot_rank))
@@ -50,7 +51,7 @@ plotSub <- paste0(tad_to_plot, " - rank: ", tad_plot_rank)
 my_xlab <- "TAD genes (ordered by start positions)"
 my_ylab <- "RNA-seq expression count [log10]"
 
-plotType <- "png"
+plotType <- "svg"
 myHeight <- ifelse(plotType=="png", 500, 7)
 myWidth <- myHeight
 plotCex <- 1.4
@@ -180,20 +181,12 @@ withRank_toplot_dt2 <- do.call(rbind, by(toplot_dt, list(toplot_dt$symbol), func
   dt$samp_rank <- 1:nrow(dt)
   dt
 }))
-
-
 withRank_toplot_dt2$hicds <- hicds
 withRank_toplot_dt2$exprds <- exprds
+withRank_toplot_dt2 <- merge(withRank_toplot_dt2, inDT, all.x=TRUE, all.y=FALSE, by=c())
 
-withRank_toplot_dt2 <- merge(withRank_toplot_dt2, inDT, all.x=TRUE, all.y=FALSE, by=c("hicds", "exprds", "region", "entrezID"))
-stopifnot(!is.na(withRank_toplot_dt2))
 
-withRank_toplot_dt2$symbol_lab <- paste0(withRank_toplot_dt2$symbol, "\n(rank: ", withRank_toplot_dt2$gene_rank, ")")
-
-withRank_toplot_dt2$symbol_foo <- withRank_toplot_dt2$symbol
-withRank_toplot_dt2$symbol <- withRank_toplot_dt2$symbol_lab
-
-tmp <- withRank_toplot_dt2[,c("symbol", "start", "end", "symbol_lab")]
+tmp <- withRank_toplot_dt2[,c("symbol", "start", "end")]
 tmp <- unique(tmp)
 tmp <- tmp[order(tmp$start, tmp$end),]
 

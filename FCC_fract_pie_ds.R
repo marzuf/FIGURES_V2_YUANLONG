@@ -2,7 +2,7 @@ hicds <- "ENCSR489OCU_NCI-H460_40kb"
 exprds <- "TCGAluad_norm_luad"
 # exprds <- "TCGAlusc_norm_lusc"
 
-plotType <- "png"
+plotType <- "svg"
 
 source("settings.R")
 require(ggplot2)
