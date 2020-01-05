@@ -217,7 +217,7 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
     axis.line.x = element_line(size = .2, color = "black"),
     axis.line.y = element_line(size = .2, color = "black"),
     axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
-    axis.text.x = element_text(color=mycols, hjust=1,vjust = 0.5, size=12, angle=90, family=fontFamily),
+    axis.text.x = element_text(color=mycols, hjust=0.5,vjust = 0.5, size=12, family=fontFamily),
     axis.title.y = element_text(color="black", size=14, family=fontFamily),
     axis.title.x = element_text(color="black", size=14, family=fontFamily),
     panel.border = element_blank(),
@@ -238,10 +238,6 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
   geom_text(data=legDT, aes(label = paste0(labsymbol, " ", legDT$legLabel), x = 59, y =c(0, 0.05, 0.1)),
             vjust = 0, hjust=0,
             inherit.aes = FALSE, color = legDT$cmpColor)
-
-
-
-
 
 outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withSymb_barplot.", plotType))
 ggsave(plot = fract_plot_with_symb, filename = outFile, height=myHeightGG, width = myWidthGG*2)
@@ -282,7 +278,7 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
     axis.line.x = element_line(size = .2, color = "black"),
     axis.line.y = element_line(size = .2, color = "black"),
     axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
-    axis.text.x = element_text(color=mycols, hjust=1,vjust = 0.5, size=12, angle=90, family=fontFamily),
+    axis.text.x = element_text(color=mycols, hjust=0.5,vjust = 0.5, size=12, family=fontFamily),
     axis.title.y = element_text(color="black", size=14, family=fontFamily),
     axis.title.x = element_text(color="black", size=14, family=fontFamily),
     panel.border = element_blank(),

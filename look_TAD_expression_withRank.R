@@ -4,7 +4,6 @@ cat(paste0("> Rscript look_TAD_expression_withRank.R\n"))
 
 script_name <- "look_TAD_expression_withRank.R"
 
-
 suppressPackageStartupMessages(library(foreach, warn.conflicts = FALSE, quietly = TRUE, verbose = FALSE))
 suppressPackageStartupMessages(library(doMC, warn.conflicts = FALSE, quietly = TRUE, verbose = FALSE))
 suppressPackageStartupMessages(library(dplyr, warn.conflicts = FALSE, quietly = TRUE, verbose = FALSE))
@@ -37,6 +36,7 @@ hicds <- args[1]
 exprds <- args[2]
 tad_to_plot <- args[3]
 
+cat("load inDT \n")
 inDT <- get(load("../v2_Yuanlong_Cancer_HiC_data_TAD_DA/GENE_RANK_TAD_RANK/all_gene_tad_signif_dt.Rdata"))
 inDT <- inDT[inDT$hicds == hicds & inDT$exprds == exprds,]
 
@@ -183,7 +183,10 @@ withRank_toplot_dt2 <- do.call(rbind, by(toplot_dt, list(toplot_dt$symbol), func
 }))
 withRank_toplot_dt2$hicds <- hicds
 withRank_toplot_dt2$exprds <- exprds
-withRank_toplot_dt2 <- merge(withRank_toplot_dt2, inDT, all.x=TRUE, all.y=FALSE, by=c())
+
+cat("merge withRank and inDT \n")
+
+withRank_toplot_dt2 <- merge(withRank_toplot_dt2, inDT, all.x=TRUE, all.y=FALSE, by=intersect(colnames(inDT), colnames(withRank_toplot_dt2)))
 
 
 tmp <- withRank_toplot_dt2[,c("symbol", "start", "end")]
