@@ -42,8 +42,6 @@ def to_matrix(data, chrom1, chrom2,
 
 expr_ds = None
 # python plotHiC_withTADs_withCols.py ENCSR489OCU_NCI-H460_40kb chr11_TAD390 mega_ENCSR489OCU_NCI-H460_mat_chr11_40kb_ob.txt
-# python plotHiC_withTADs_withCols.py ENCSR489OCU_NCI-H460_40kb TCGAlusc_norm_lusc chr11_TAD390 mega_ENCSR489OCU_NCI-H460_mat_chr11_40kb_ob.txt
-
 myargs = sys.argv
 if(len(myargs) == 5):
     hic_ds = myargs[1]
@@ -68,7 +66,7 @@ other_col_tad = "black"
 select_col_tad = "green"
 #other_col_lab = "black"
 #select_col_lab = "green"
-nAround_toplot = 2
+nAround_toplot = 0
 nSurroundBins = 2
 shrink = 1
 tad_lwd = 1.2
@@ -76,27 +74,10 @@ lab_offset = -0.8
 labSize = 10    
 labBox = True
 addGenes = True
-geneSymbPos = "right" 
 genesOffset = 0.5
+genesSpacing = 0.5
 symbolOffset = 0.1
-withBox = True
-        
-if nAround_toplot == 0:    
-    geneSymbPos = "above" 
-    geneName_size = 8
-    geneBar_height = 0.2
-    genesSpacing = 0.5
-
-elif nAround_toplot == 2:    
-    geneName_size = 8
-    geneBar_height = 1
-    genesSpacing = 1.2
-
-else :    
-    geneName_size = 8
-    geneBar_height = 0.2
-    
-gene_col = "darkblue"
+gene_col = "blue"
 gene_lwd = 1
 plot_labs = True
 plotTit = hic_ds
@@ -106,25 +87,24 @@ if expr_ds:
 if addGenes:
     assert expr_ds
 
-################################################################################################################################# PARAMETERS TO SET HERE  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-setDir = os.path.join("/media", "electron")
-setDir = os.path.join("/")
-data_folder = os.path.join(setDir, "mnt", "etemp", "marie", "v2_Yuanlong_Cancer_HiC_data_TAD_DA")
+# PARAMETERS TO SET 
+setDir = "/media/electron"
+setDir = ""
 resolution = 40000
-tad_file  = os.path.join(setDir, data_folder, hic_ds, "genes2tad", "all_assigned_regions.txt")
+tad_file  = setDir + "/mnt/etemp/marie/v2_Yuanlong_Cancer_HiC_data_TAD_DA/" + hic_ds + "/genes2tad/all_assigned_regions.txt"
 assert os.path.exists(tad_file)
 
 if addGenes:
-    gene2tad_file  = os.path.join(setDir, data_folder, hic_ds, "genes2tad", "all_genes_positions.txt")
+    gene2tad_file  = setDir + "/mnt/etemp/marie/v2_Yuanlong_Cancer_HiC_data_TAD_DA/" + hic_ds + "/genes2tad/all_genes_positions.txt"
     assert os.path.exists(gene2tad_file)
-    entrezDT_file = os.path.join(setDir, "mnt", "ed4", "marie", "entrez2synonym", "entrez", "ENTREZ_POS", "gff_entrez_position_GRCh37p13_nodup.txt")
+    entrezDT_file = setDir + "/mnt/ed4/marie/entrez2synonym/entrez/ENTREZ_POS/gff_entrez_position_GRCh37p13_nodup.txt"
     assert os.path.exists(entrezDT_file)
-    pipGene_file =  os.path.join(setDir, data_folder, "PIPELINE", "OUTPUT_FOLDER" , hic_ds, expr_ds, "0_prepGeneData", "pipeline_geneList.txt")
+    pipGene_file = setDir + "/mnt/etemp/marie/v2_Yuanlong_Cancer_HiC_data_TAD_DA/PIPELINE/OUTPUT_FOLDER/" + hic_ds + "/" + expr_ds + "/0_prepGeneData" + "/pipeline_geneList.txt"
     assert os.path.exists(pipGene_file)
-#################################################################################################################################
 
-out_dir = os.path.join("PLOTHIC_WITHTADS_WITHCOLS")
-output_file = os.path.join(out_dir, hic_ds + "_" + select_tad + ".pdf")
+out_dir = "PLOTHIC_WITHTADS_WITHCOLS"
+output_file =  out_dir + "/" + hic_ds + "_" + select_tad + ".pdf"
+
 
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
@@ -157,6 +137,8 @@ lab_list = ([""] * nAround_toplot) + [select_tad] + ([""] * nAround_toplot)
 col_list_tad = ([other_col_tad] * nAround_toplot) + [select_col_tad] + ([other_col_tad] * nAround_toplot)
 #col_list_lab = ([other_col_lab] * nAround_toplot) + [select_col_lab] + ([other_col_lab] * nAround_toplot)
 
+
+
 map_start = start_pos_list[0] - nSurroundBins*resolution
 map_end = end_pos_list[len(end_pos_list)-1] + nSurroundBins*resolution
 
@@ -179,23 +161,27 @@ diagonal_height = np.sqrt(m.shape[0]**2 / 2)
 
 my_map = plt.get_cmap("Reds")
 my_map.set_under('white')
+#fig, ax = plt.subplots(1, 1, figsize=(40, 40))
 fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 X = np.log10(np.triu(m.todense()*shrink) + 1)
 ax.matshow( rotate(X, 45), cmap=my_map, vmin=0.01 )
 
-plt.ylim(diagonal_height)
+if addGenes:
+    plt.ylim(diagonal_height )
+    #plt.ylim(diagonal_height + genesOffset + genesSpacing*tad_genes_symbols_dt.shape[0])
+else:
+    plt.ylim(diagonal_height)
 
 plt.xticks([])
 plt.yticks([])
 plt.axis('on')
 
-if not withBox:
-    plt.box(on=None)
 
 for tad_start, tad_end , tad_lab, tad_col in zip(tad_toplot[0], tad_toplot[1], tad_toplot[2], tad_toplot[3]):
 
     tad_start_bin = (tad_start - map_start)//resolution  
     tad_end_bin = (tad_end - map_start)//resolution
+
 
     conv_start = np.sqrt(2) * tad_start_bin  # distance to bin start: on the side of the square, it is the # of bins but in triangle plot, it is the diagonal
     conv_end = np.sqrt(2) * tad_end_bin
@@ -221,6 +207,12 @@ for tad_start, tad_end , tad_lab, tad_col in zip(tad_toplot[0], tad_toplot[1], t
 if addGenes:
     from matplotlib.patches import Rectangle
     from matplotlib import collections  as mc
+    #lines = [[(0, 50), (20, 50)], [(50, 50), (70, 50)]]
+    #c = np.array([(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1)])
+    #c = ['black', 'green']
+    #lc = mc.LineCollection(lines, colors=c, linewidths=2)
+    #fig, ax = pl.subplots()
+    #ax.add_collection(lc)
     genePos = diagonal_height.item() + genesOffset
     
     
@@ -229,39 +221,38 @@ if addGenes:
 #     first_lab = "FOO_FIRST_GENE"
 #     conv_gene_start = np.sqrt(2) * (first_start - map_start)/resolution
 #     conv_gene_end = np.sqrt(2) * (first_end - map_start)/resolution
+#     print("FIRST");print(conv_gene_start);print(genePos);print(conv_gene_end-conv_gene_start)
 #     ax.add_patch(Rectangle((conv_gene_start, genePos), (conv_gene_end-conv_gene_start), height=0.2,
 #                            facecolor=gene_col, clip_on=False))
 #     plt.text(0.5*(conv_gene_start+conv_gene_end), genePos-symbolOffset, first_lab, fontsize=8, horizontalalignment='center', verticalalignment='center')
 #     genePos += genesSpacing
+        
 
-for i in range(tad_genes_symbols_dt.shape[0]):
+    
+    
+    for i in range(tad_genes_symbols_dt.shape[0]):
         conv_gene_start = np.sqrt(2) * (tad_genes_symbols_dt['start'][i] - map_start)/resolution
         conv_gene_end = np.sqrt(2) * (tad_genes_symbols_dt['end'][i] - map_start)/resolution
-        
-        ax.add_patch(Rectangle((conv_gene_start, genePos), (conv_gene_end-conv_gene_start), height=geneBar_height, 
+        #plt.plot([conv_gene_start, genePos], [conv_gene_end, genePos], color=gene_col, lw=gene_lwd)
+        #lines = [[(conv_gene_start, genePos), (conv_gene_end, genePos)]]
+        #c = [gene_col]
+        #lc = mc.LineCollection(lines, colors=c, linewidths=2)
+        #ax.add_collection(lc)
+        #plt.add_collection(lc)
+        #plt.text(conv_gene_start, genePos,tad_genes_symbols_dt['symbol'][i], fontsize=10, horizontalalignment='right', verticalalignment='center', fontweight='bold')
+        print("i="+str(i));print(conv_gene_start);print(genePos);print(conv_gene_end-conv_gene_start)
+        ax.add_patch(Rectangle((conv_gene_start, genePos), (conv_gene_end-conv_gene_start), height=0.2,
                                facecolor=gene_col, clip_on=False))
-        
-#         plt.hlines(y=genePos, xmin=conv_gene_start, xmax=conv_gene_end)
-#         plt.hlines(y=genePos, xmin=map_start, xmax=map_end)
-        
-        ax.axhline(y=genePos, xmin=map_start, xmax=map_end, c = 'red')
-        plt.axhline(y=genePos)
-        plt.axhline(y=genePos+geneBar_height)
-        
-        symb_pos = 0.5*(genePos+geneBar_height + genePos)
-        
-        if geneSymbPos == "above":
-            plt.text(0.5*(conv_gene_start+conv_gene_end), genePos-symbolOffset,tad_genes_symbols_dt['symbol'][i], fontsize=geneName_size, horizontalalignment='center', verticalalignment='center')
-        elif geneSymbPos == "right":
-            plt.text(conv_gene_end, symb_pos,tad_genes_symbols_dt['symbol'][i], fontsize=geneName_size, horizontalalignment='left', verticalalignment='center')
-        elif geneSymbPos == "left":
-            plt.text(conv_gene_start, symb_pos,tad_genes_symbols_dt['symbol'][i], fontsize=geneName_size, horizontalalignment='right', verticalalignment='center')
+        plt.text(0.5*(conv_gene_start+conv_gene_end), genePos-symbolOffset,tad_genes_symbols_dt['symbol'][i], fontsize=8, horizontalalignment='center', verticalalignment='center')
 
         genePos += genesSpacing
         
         
+        
+        
 #     last_start = 0.5*( start_pos_list[0] + end_pos_list[len(end_pos_list)-1])
 #     last_end =  end_pos_list[len(end_pos_list)-1]
+#     last_lab = "FOO_LAST_GENE"
 #     conv_gene_start = np.sqrt(2) * (last_start - map_start)/resolution
 #     conv_gene_end = np.sqrt(2) * (last_end - map_start)/resolution
 #     print("LAST");print(conv_gene_start);print(genePos);print(conv_gene_end-conv_gene_start)
@@ -271,10 +262,13 @@ for i in range(tad_genes_symbols_dt.shape[0]):
 #     genePos += genesSpacing
     
         
+        
+
+   
 plt.title(plotTit, fontweight="bold")    
 
 if output_file:
-	plt.savefig(output_file, bbox_inches='tight',transparent=True)#, pad_inches=0)
+	plt.savefig(output_file, bbox_inches='tight',transparent=True)
     
 	print("... saved: " + output_file + "\n")
     
