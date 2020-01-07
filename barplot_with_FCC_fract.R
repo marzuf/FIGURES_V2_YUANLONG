@@ -32,8 +32,6 @@ fcc_fract_names[fcc_fract_names == "]-1, -0.75]"] <- "[-1, -0.75]"
 # fract_sort <- "FCC > 0.75 and FCC <= 1"
 fract_sort <- fcc_fract_names[length(fcc_fract_names)]
 
-labsymbol <- "\u25CF"
-
 ggsci_pal <- "lancet"
 ggsci_subpal <- ""
 
@@ -88,10 +86,12 @@ if(buildData){
     exprds_dt
   }
   outFile <- file.path(outFolder, paste0("all_dt.Rdata"))
+  auc_fract_file <- outFile
   save(all_dt, file = outFile, version=2)
   cat(paste0("... written: ", outFile, "\n"))
 } else {
   inFile <- file.path(outFolder, paste0("all_dt.Rdata"))
+  auc_fract_file <- inFile
   all_dt <- get(load(inFile))
   # load("BARPLOT_WITH_FCC_FRACT/all_dt.Rdata")
 }
@@ -103,6 +103,8 @@ all_dt$dataset <- paste0(all_dt$hicds, "\n", all_dt$exprds)
 all_dt <- all_dt[order(all_dt$countFCC, decreasing = TRUE),]
 ds_order <- all_dt$dataset[all_dt$intervalFCC == fract_sort]
 exprds_order <- all_dt$exprds[all_dt$intervalFCC == fract_sort]
+exprds_order_fract <- exprds_order
+
 if(fcc_auc_sort) {
   all_dt$dataset <- factor(all_dt$dataset, levels=fcc_ds_order)
   stopifnot(!is.na(all_dt$dataset))
@@ -112,7 +114,7 @@ if(fcc_auc_sort) {
   stopifnot(!is.na(all_dt$dataset))
 }
 tmp1 <- all_dt
-tmp1 <- tmp1[as.numeric(tmp1$dataset),]
+tmp1 <- tmp1[order(as.numeric(tmp1$dataset)),]
 exprds_order <- as.character(tmp1$exprds[tmp1$intervalFCC == fract_sort])
 
 nDS <- length(unique(all_dt$dataset))
@@ -128,6 +130,7 @@ legDT$legLabel <- paste0(legDT$cmpType, " (", legDT$count, ")")
 mycols <- all_cols[all_cmps[exprds_order]]
 # tmp_dt <- aggregate(countFCC~ intervalFCC, data=all_dt, FUN=sum) # none has zero
 
+mycols_fract <- all_cols[all_cmps[exprds_order_fract]]
 
 fract_plot_with_lab <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFCC, color=intervalFCC)) + 
   geom_bar(position="stack", stat="identity") +
@@ -183,11 +186,10 @@ fract_plot_with_lab <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFC
 
 
 outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withLabs_barplot.", plotType))
-ggsave(plot = fract_plot_with_lab, filename = outFile, height=myHeightGG, width = myWidthGG*2)
+ggsave(plot = fract_plot_with_lab, filename = outFile, height=myHeightGG*1.5, width = myWidthGG*2)
 cat(paste0("... written: ", outFile, "\n"))
 
 all_dt$labSymb <- labsymbol
-
 
 fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFCC, color=intervalFCC)) + 
   geom_bar(position="stack", stat="identity") +
@@ -278,7 +280,7 @@ fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalF
     axis.line.x = element_line(size = .2, color = "black"),
     axis.line.y = element_line(size = .2, color = "black"),
     axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
-    axis.text.x = element_text(color=mycols, hjust=0.5,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color=mycols_fract, hjust=0.5,vjust = 0.5, size=12, family=fontFamily),
     axis.title.y = element_text(color="black", size=14, family=fontFamily),
     axis.title.x = element_text(color="black", size=14, family=fontFamily),
     panel.border = element_blank(),
@@ -308,12 +310,68 @@ cat(paste0("... written: ", outFile, "\n"))
 
 
 
+fract_plot_with_symb <- ggplot(all_dt, aes(x=dataset, y=countFCC, fill=intervalFCC, color=intervalFCC)) + 
+  geom_bar(position="stack", stat="identity") +
+  # coord_cartesian(expand = FALSE) +
+  coord_cartesian(clip = 'off', expand=FALSE) +
+  ggtitle(paste0(fractBarTitle), 
+          subtitle = "AUC ratios:\n")+
+  # subtitle = "(all datasets)")+
+  labs(fill=legTitle)+
+  guides(color=FALSE)+
+  eval(parse(text=paste0("scale_color_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  eval(parse(text=paste0("scale_fill_", ggsci_pal, "(", ggsci_subpal, ")")))+
+  scale_y_continuous(name=paste0("Fraction of TADs"),
+                     limits = c(0,1), 
+                     breaks = seq(from=0, to=1, by=0.1),
+                     labels = seq(from=0, to=1, by=0.1))+
+  scale_x_discrete(name=paste0("(all datasets - n=", nDS, ")"))+
+  theme( # Increase size of axis lines
+    plot.margin = unit(plotMargin, "lines"), # top, right, bottom, and left 
+    plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0, vjust=2, face = "italic", size = 8, family=fontFamily, lineheight = 1.75),
+    panel.grid = element_blank(),
+    # panel.grid.major.y = element_line(colour = "grey"),
+    # panel.grid.minor.y = element_line(colour = "grey"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.line.x = element_line(size = .2, color = "black"),
+    axis.line.y = element_line(size = .2, color = "black"),
+    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color=mycols_fract, hjust=1,vjust = 0.5, size=7, family=fontFamily, angle=90),
+    axis.title.y = element_text(color="black", size=14, family=fontFamily),
+    axis.title.x = element_text(color="black", size=14, family=fontFamily),
+    panel.border = element_blank(),
+    panel.background = element_rect(fill = "transparent"),
+    legend.background =  element_rect(),
+    legend.key = element_blank(),
+    legend.title = element_text(face="bold", family=fontFamily)
+  )+
+  geom_text(data=x, aes(x = x$dataset, y=1, 
+                        label=sprintf("%.2f", x$fcc_auc)),
+            inherit.aes=FALSE, angle=90, size=3, vjust=0.5, hjust=0) +
+  theme(
+    # legend.position = c(.95, .95),
+    # legend.box.just = "right",
+    # legend.margin = margin(6, 6, 6, 6),
+    legend.justification = c("right", "top")
+  ) + 
+  geom_text(data=legDT, aes(label = paste0(labsymbol, " ", legDT$legLabel), x = 59, y =c(0, 0.05, 0.1)),
+            vjust = 0, hjust=0,
+            inherit.aes = FALSE, color = legDT$cmpColor)
+
+
+
+outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_withSymb_withLabs_fractSorted_barplot.", plotType))
+ggsave(plot = fract_plot_with_symb, filename = outFile, height=myHeightGG*1.5, width = myWidthGG*2)
+cat(paste0("... written: ", outFile, "\n"))
+
 
 ######################################################################################
-# FRACT and FCC AUC
+# FRACT and FCC AUC - cont x-axis
 ######################################################################################
 
-auc_fract_dt <- all_dt
+auc_fract_dt <- get(load(auc_fract_file))
 auc_ratio_dt <- get(load(auc_ratio_file))
 
 auc_fract_ratio_dt <- merge(auc_fract_dt, auc_ratio_dt, by=c("hicds", "exprds"), all.x=TRUE, all.y=TRUE)
@@ -352,19 +410,118 @@ scatPlot <- ggscatter(auc_fract_ratio_dt,
 
 
 
-outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_nbrSignifs_auc_scatterplot.", plotType))
+outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_nbrSignifs_auc_scatterplot_xcont.", plotType))
 ggsave(plot = scatPlot, filename = outFile, height=myHeightGG, width = myWidthGG)
 cat(paste0("... written: ", outFile, "\n"))
 
+######################################################################################
+# FRACT and FCC AUC - discrete x-axis
+######################################################################################
 
+xax_exp <- 0.01
+
+# auc_fract_dt <- get(load("BARPLOT_WITH_FCC_FRACT/all_dt.Rdata"))
+# auc_fract_ratio_dt <- get(load("BARPLOT_FCC_AUC_RATIO//all_dt.Rdata"))
+
+auc_fract_dt <- get(load(auc_fract_file))
+auc_ratio_dt <- get(load(auc_ratio_file))
+
+auc_fract_ratio_dt <- merge(auc_fract_dt, auc_ratio_dt, by=c("hicds", "exprds"), all.x=TRUE, all.y=TRUE)
+stopifnot(!is.na(auc_fract_ratio_dt))
+
+auc_fract_ratio_dt$intervalFCC <- gsub("FCC ", "", auc_fract_ratio_dt$intervalFCC)
+# auc_fract_ratio_dt$intervalFCC <- factor(auc_fract_ratio_dt$intervalFCC, levels=rev(fcc_fract_names))
+auc_fract_ratio_dt$intervalFCC <- factor(auc_fract_ratio_dt$intervalFCC, levels=rev(gsub("FCC ", "", fcc_fract_names)))
+
+ds_rank_dt <- auc_fract_ratio_dt[,c("hicds", "exprds", "fcc_auc")]
+ds_rank_dt$dataset <- paste0(ds_rank_dt$hicds,"\n", ds_rank_dt$exprds)
+ds_rank_dt <- unique(ds_rank_dt)
+stopifnot(!duplicated(ds_rank_dt$dataset))
+ds_rank_dt <- ds_rank_dt[order(ds_rank_dt$fcc_auc, decreasing=TRUE),]
+ds_auc_order <- ds_rank_dt$dataset
+mycols_scat <- all_cols[all_cmps[paste0(ds_rank_dt$exprds)]]
+
+auc_fract_ratio_dt$dataset <- paste0(auc_fract_ratio_dt$hicds, "\n", auc_fract_ratio_dt$exprds)
+auc_fract_ratio_dt$dataset <- factor(auc_fract_ratio_dt$dataset, levels=ds_auc_order)
+stopifnot(!is.na(auc_fract_ratio_dt$dataset))
+
+auc_fract_ratio_dt$ds_rank <- as.numeric(auc_fract_ratio_dt$dataset)
+xbreaks <- sort(unique(auc_fract_ratio_dt$ds_rank))
+
+myPals <-  eval(parse(text=paste0("pal_", ggsci_pal, "(", ggsci_subpal, ")")))(length(unique(auc_fract_ratio_dt$intervalFCC)))
+
+scatPlot <- ggscatter(auc_fract_ratio_dt, 
+                      title = paste0("all datasets (n=", length(unique(file.path(auc_fract_ratio_dt$hicds, auc_fract_ratio_dt$exprds))), ")"),
+                      x = "ds_rank", 
+                      y = "countFCC",
+                      color = "intervalFCC",
+                      xlab = "Datasets (ranked by FCC AUC ratio)",
+                      ylab = "Ratio of TADs",
+                      palette = myPals) +
+  labs(color=legTitle)+
+  geom_smooth(aes(color = intervalFCC),method = "lm", linetype=2, se=F)+
+  
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(labels = rep(labsymbol, length(xbreaks)), breaks= xbreaks, expand=c(xax_exp,xax_exp)) + 
+  
+  
+  
+  theme( # Increase size of axis lines
+    plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
+    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color=mycols_scat, hjust=0.5,vjust = 0.5, size=12, family=fontFamily),
+    axis.title.y = element_text(color="black", size=14, family=fontFamily),
+    axis.title.x = element_text(color="black", size=14, family=fontFamily),
+    panel.border = element_blank(),
+    panel.background = element_rect(fill = "transparent"),
+    legend.background =  element_rect(),
+    legend.title = element_text(face="bold", family=fontFamily)
+  )
+
+outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_nbrSignifs_auc_scatterplot_xcont.", plotType))
+ggsave(plot = scatPlot, filename = outFile, height=myHeightGG, width = myWidthGG*1.5)
+cat(paste0("... written: ", outFile, "\n"))
+
+scatPlot <- ggscatter(auc_fract_ratio_dt, 
+                      title = paste0("all datasets (n=", length(unique(file.path(auc_fract_ratio_dt$hicds, auc_fract_ratio_dt$exprds))), ")"),
+                      x = "ds_rank", 
+                      y = "countFCC",
+                      color = "intervalFCC",
+                      xlab = "Datasets (ranked by FCC AUC ratio)",
+                      ylab = "Ratio of TADs",
+                      palette = myPals) +
+  labs(color=legTitle)+
+  geom_smooth(aes(color = intervalFCC),method = "lm", linetype=2, se=F)+
+  
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_x_continuous(labels = ds_auc_order, breaks=xbreaks, expand=c(xax_exp,xax_exp))+
+
+  theme( # Increase size of axis lines
+    plot.title = element_text(hjust = 0.5, face = "bold", size=16, family=fontFamily),
+    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14, family=fontFamily),
+    axis.text.y = element_text(color="black", hjust=1,vjust = 0.5, size=12, family=fontFamily),
+    axis.text.x = element_text(color=mycols_scat, hjust=1,vjust = 0.5, size=7, family=fontFamily, angle=90),
+    axis.title.y = element_text(color="black", size=14, family=fontFamily),
+    axis.title.x = element_text(color="black", size=14, family=fontFamily),
+    panel.border = element_blank(),
+    panel.background = element_rect(fill = "transparent"),
+    legend.background =  element_rect(),
+    legend.title = element_text(face="bold", family=fontFamily)
+  )
+
+outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_nbrSignifs_auc_scatterplot_xcont_withLabs.", plotType))
+ggsave(plot = scatPlot, filename = outFile, height=myHeightGG, width = myWidthGG*1.5)
+cat(paste0("... written: ", outFile, "\n"))
 
 
 ######################################################################################
 # FRACT and nSignif
 ######################################################################################
 
-inFile <- file.path(outFolder, paste0("all_dt.Rdata"))
-all_dt <- get(load(inFile))
+
+
+all_dt <- get(load(auc_fract_file))
 auc_fract_dt <- all_dt
 all_auc_signif_dt <- get(load(signif_file))
 
@@ -407,7 +564,7 @@ scatPlot <- ggscatter(auc_fract_signif_dt,
   scale_x_continuous(breaks = scales::pretty_breaks(n = 10))
 
 
-outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_fcc_auc_scatterplot.", plotType))
+outFile <- file.path(outFolder, paste0("all_ds_fcc_fract_scores_fcc_auc_scatterplot_xcont.", plotType))
 ggsave(plot = scatPlot, filename = outFile, height=myHeightGG, width = myWidthGG)
 cat(paste0("... written: ", outFile, "\n"))
 

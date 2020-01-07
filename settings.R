@@ -1,3 +1,9 @@
+
+# V2
+# labsymbol <- "\u25CF" # circle
+# V3
+labsymbol <- "\u25A0" # squares
+
 runFolder <-  "../v2_Yuanlong_Cancer_HiC_data_TAD_DA/"
 
 pipFolder <- file.path(runFolder, "PIPELINE/OUTPUT_FOLDER")
@@ -39,8 +45,16 @@ fontFamily <- "Hershey"
 #pal_gsea()(100) # 12
 #pal_material()(100) # 10
 
+tad_signif_col <- "dodgerblue3"
+gene_signif_col <- "firebrick3"
+
 source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
-all_cols[all_cols == "red"] <- "brown3"
-all_cols[all_cols == "blue"] <- "darkblue"
-all_cols[all_cols == "green"] <- "forestgreen"
+# V2:
+#all_cols[all_cols == "red"] <- "brown3"  # wt vs mut
+#all_cols[all_cols == "blue"] <- "darkblue" # norm vs tum
+#all_cols[all_cols == "green"] <- "forestgreen" # subtypes
+# V3:
+all_cols[all_cols == "red"] <- "brown3"  # wt vs mut
+all_cols[all_cols == "blue"] <- "darkblue" # norm vs tum
+all_cols[all_cols == "green"] <- "forestgreen" # subtypes
 

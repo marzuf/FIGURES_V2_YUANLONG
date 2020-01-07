@@ -15,6 +15,7 @@ startTime <- Sys.time()
 plotType <- "svg"
 
 synType <- "inferCARs" #inferCARs or proCARs
+synType <- "proCARs" #inferCARs or proCARs
 
 source("settings.R")
 
@@ -141,6 +142,8 @@ if(maxConserved %in% synt_dt$refID) {
   
 } else {
   yOffset <- 0.3   
+  synmatch_start <- NULL
+  synmatch_end <- NULL
 }
 
 
@@ -219,95 +222,95 @@ myplot <- recordPlot()
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
 
-
-
-outFile <- file.path(outFolder, paste0(maxConserved, "_", synType, "_viz.", plotType))
-do.call(plotType, list(outFile, height=myHeight, width=myWidth*2))
-
-initMar <- par()$mar
-par(mar=initMar+c(0,10,0,0))
-par(family="Heshley")
-par(xpd=TRUE)
-plot(NULL,
-     main = paste0(maxConserved),
-     xlim = c(xStart, xEnd),
-     # ylim = c(yStart, yEnd),
-     ylim = c(0, yEnd),
-     xlab = "",
-     # xlab = paste0(gsub("chr", "chromosome ", chromo)),
-     ylab = "",
-     axes = FALSE,
-     cex.main = plotCex
-)
-axis(1,
-     at = unique(sort(c(as.numeric(as.character(all_regions_starts_ends["start",])), 
-                        as.numeric(as.character(all_regions_starts_ends["end",]))))), 
-     cex = 0.6)
-mtext(side = 1, text= paste0(gsub("chr", "chromosome ", chromo)), font = 2, cex = 1, line=2)
-
-# draw the tads
-segments(
-  x0 = as.numeric(all_regions_starts_ends["start",]),
-  y0 = dsPos,
-  x1 = as.numeric(all_regions_starts_ends["end",]),
-  y1 = dsPos,
-  col=tad_col
-)
-text(
-  x = as.numeric(all_regions_starts_ends["start",]),
-  y = dsPos + textOffset,
-  # labels = colnames(all_regions_starts_ends),
-  labels = dirname(colnames(all_regions_starts_ends)),
-  # cex = 0.5,
-  cex = 0.7,
-  pos=2,
-  col = tad_col
-)
-segments(
-  x0 = as.numeric(all_genes_starts_ends["start",]),
-  y0 = genePos,
-  x1 = as.numeric(all_genes_starts_ends["end",]),
-  y1 = genePos,
-  col=gene_col
-)
-text(
-  x = 0.5*(as.numeric(all_genes_starts_ends["start",]) + as.numeric(all_genes_starts_ends["end",])),
-  y = genePos - 5*textOffset,
-  # y = genePos + 0,
-  labels = as.character(all_genes_starts_ends["symbol",]),
-  cex = 1,
-  pos=3,
-  col=gene_col
-)
-
-segments(x0=c(as.numeric(all_genes_starts_ends["start",]), as.numeric(all_genes_starts_ends["end",])),
-         y0=0-yOffset,
-         x1=c(as.numeric(all_genes_starts_ends["start",]), as.numeric(all_genes_starts_ends["end",])),
-         y1 = rep(genePos,each=2),
-         lty=2, col = gene_col)
-
-
-
-segments(
-  x0 = synmatch_start,
-  y0=max(genePos) + syntOffset,
-  x1=synmatch_end,
-  y1=max(genePos) + syntOffset,
-  col = syn_col,
-  lwd=syntLwd
-)
-
-text(
-  x = min(synmatch_start),
-  y = max(genePos) + syntOffset,
-  labels = paste0(synType),
-  # cex = 0.5,
-  cex = 0.7,
-  pos=2,
-  col = syn_col
-)
-
-
-foo <- dev.off()
-cat(paste0("... written: ", outFile, "\n"))
-
+if( !is.null(synmatch_start)) {
+  outFile <- file.path(outFolder, paste0(maxConserved, "_", synType, "_viz.", plotType))
+  do.call(plotType, list(outFile, height=myHeight, width=myWidth*2))
+  
+  initMar <- par()$mar
+  par(mar=initMar+c(0,10,0,0))
+  par(family="Heshley")
+  par(xpd=TRUE)
+  plot(NULL,
+       main = paste0(maxConserved),
+       xlim = c(xStart, xEnd),
+       # ylim = c(yStart, yEnd),
+       ylim = c(0, yEnd),
+       xlab = "",
+       # xlab = paste0(gsub("chr", "chromosome ", chromo)),
+       ylab = "",
+       axes = FALSE,
+       cex.main = plotCex
+  )
+  axis(1,
+       at = unique(sort(c(as.numeric(as.character(all_regions_starts_ends["start",])), 
+                          as.numeric(as.character(all_regions_starts_ends["end",]))))), 
+       cex = 0.6)
+  mtext(side = 1, text= paste0(gsub("chr", "chromosome ", chromo)), font = 2, cex = 1, line=2)
+  
+  # draw the tads
+  segments(
+    x0 = as.numeric(all_regions_starts_ends["start",]),
+    y0 = dsPos,
+    x1 = as.numeric(all_regions_starts_ends["end",]),
+    y1 = dsPos,
+    col=tad_col
+  )
+  text(
+    x = as.numeric(all_regions_starts_ends["start",]),
+    y = dsPos + textOffset,
+    # labels = colnames(all_regions_starts_ends),
+    labels = dirname(colnames(all_regions_starts_ends)),
+    # cex = 0.5,
+    cex = 0.7,
+    pos=2,
+    col = tad_col
+  )
+  segments(
+    x0 = as.numeric(all_genes_starts_ends["start",]),
+    y0 = genePos,
+    x1 = as.numeric(all_genes_starts_ends["end",]),
+    y1 = genePos,
+    col=gene_col
+  )
+  text(
+    x = 0.5*(as.numeric(all_genes_starts_ends["start",]) + as.numeric(all_genes_starts_ends["end",])),
+    y = genePos - 5*textOffset,
+    # y = genePos + 0,
+    labels = as.character(all_genes_starts_ends["symbol",]),
+    cex = 1,
+    pos=3,
+    col=gene_col
+  )
+  
+  segments(x0=c(as.numeric(all_genes_starts_ends["start",]), as.numeric(all_genes_starts_ends["end",])),
+           y0=0-yOffset,
+           x1=c(as.numeric(all_genes_starts_ends["start",]), as.numeric(all_genes_starts_ends["end",])),
+           y1 = rep(genePos,each=2),
+           lty=2, col = gene_col)
+  
+  segments(
+    x0 = synmatch_start,
+    y0=max(genePos) + syntOffset,
+    x1=synmatch_end,
+    y1=max(genePos) + syntOffset,
+    col = syn_col,
+    lwd=syntLwd
+  )
+  
+  text(
+    x = min(synmatch_start),
+    y = max(genePos) + syntOffset,
+    labels = paste0(synType),
+    # cex = 0.5,
+    cex = 0.7,
+    pos=2,
+    col = syn_col
+  )
+  
+  
+  foo <- dev.off()
+  cat(paste0("... written: ", outFile, "\n"))
+  
+} else{
+  cat(paste0("... no syntenic block for conserved region\n"))
+}

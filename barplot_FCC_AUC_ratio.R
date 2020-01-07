@@ -110,7 +110,6 @@ all_dt$plotlab <- paste0(all_dt$hicds, "\n", all_dt$exprds)
 all_dt$plotlab_short <- ifelse(all_dt$plotlab == exdataset, exdataset, labsymbol)
 all_dt$plotlab_short <- ifelse(all_dt$plotlab == exdataset, labsymbol, labsymbol)
 plotlab_color <- all_cols[all_cmps[all_dt$exprds]]
-
 all_dt$barcolByDS <- all_cols[all_cmps[all_dt$exprds]]
 
 
@@ -138,7 +137,7 @@ foo <- dev.off()
 ############################## BAR COLS BY DATASET
 
 outFile <- file.path(outFolder, paste0("fcc_barplot_coloredBars.", plotType))
-do.call(plotType, list(outFile, height=myHeight, width=myWidth))
+do.call(plotType, list(outFile, height=myHeight, width=myWidth*1.2))
 par(family=fontFamily)
 barp <- barplot(all_dt$fcc_auc-1,
                 ylab="FCC AUC ratio", cex.lab=1.2, 
