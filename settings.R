@@ -12,6 +12,10 @@ all_hicds <- list.files(pipFolder)
 all_exprds <- sapply(all_hicds, function(x) list.files(file.path(pipFolder, x)))
 
 plotCex <- 1.4
+axisCex <- 1.4
+labCex <- 1.4
+mainCex <- 1.4
+subCex <- 1.2
 
 myHeight <- ifelse(plotType == "png", 400, 7)
 myWidth <- ifelse(plotType == "png", 400, 7)
@@ -54,7 +58,14 @@ source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
 #all_cols[all_cols == "blue"] <- "darkblue" # norm vs tum
 #all_cols[all_cols == "green"] <- "forestgreen" # subtypes
 # V3:
-all_cols[all_cols == "red"] <- "brown3"  # wt vs mut
-all_cols[all_cols == "blue"] <- "darkblue" # norm vs tum
-all_cols[all_cols == "green"] <- "forestgreen" # subtypes
+#all_cols[all_cols == "red"] <- "brown3"  # wt vs mut
+#all_cols[all_cols == "blue"] <- "darkblue" # norm vs tum
+#all_cols[all_cols == "green"] <- "forestgreen" # subtypes
+
+
+all_cols[all_cols == "red"] <- "violetred" #"chocolate"  # wt vs mut
+all_cols[all_cols == "blue"] <- "slateblue" # norm vs tum
+all_cols[all_cols == "green"] <- "slategray" # "yellow3" # subtypes
+
+options(save.defaults = list(version=2))
 

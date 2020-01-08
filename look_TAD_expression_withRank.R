@@ -175,21 +175,27 @@ withRank_toplot_dt <- do.call(rbind, by(toplot_dt, list(toplot_dt$symbol, toplot
 # cat(paste0("... written: ", outFile, "\n"))
 
 
+
 withRank_toplot_dt2 <- do.call(rbind, by(toplot_dt, list(toplot_dt$symbol), function(x) {
   x$cond <- factor(x$cond, levels=c(cond1,cond2))
   dt <- x[order(-as.numeric(x$cond), x$value, decreasing = TRUE),]
   dt$samp_rank <- 1:nrow(dt)
   dt
 }))
+
+
 withRank_toplot_dt2$hicds <- hicds
 withRank_toplot_dt2$exprds <- exprds
 
-cat("merge withRank and inDT \n")
+withRank_toplot_dt2 <- merge(withRank_toplot_dt2, inDT, all.x=TRUE, all.y=FALSE, by=c("hicds", "exprds", "region", "entrezID"))
+stopifnot(!is.na(withRank_toplot_dt2))
 
-withRank_toplot_dt2 <- merge(withRank_toplot_dt2, inDT, all.x=TRUE, all.y=FALSE, by=intersect(colnames(inDT), colnames(withRank_toplot_dt2)))
+withRank_toplot_dt2$symbol_lab <- paste0(withRank_toplot_dt2$symbol, "\n(rank: ", withRank_toplot_dt2$gene_rank, ")")
 
+withRank_toplot_dt2$symbol_foo <- withRank_toplot_dt2$symbol
+withRank_toplot_dt2$symbol <- withRank_toplot_dt2$symbol_lab
 
-tmp <- withRank_toplot_dt2[,c("symbol", "start", "end")]
+tmp <- withRank_toplot_dt2[,c("symbol", "start", "end", "symbol_lab")]
 tmp <- unique(tmp)
 tmp <- tmp[order(tmp$start, tmp$end),]
 
@@ -197,6 +203,7 @@ withRank_toplot_dt2$symbol <- factor(withRank_toplot_dt2$symbol, levels=tmp$symb
 withRank_toplot_dt2$cond <- factor(withRank_toplot_dt2$cond, levels = c(cond1,cond2))
 
 save(withRank_toplot_dt2, file="withRank_toplot_dt2.Rdata", version=2)
+
 
 p_var <-  ggplot(withRank_toplot_dt2, aes(x = samp_rank, y = value_log10, fill = cond, color=cond)) + 
   geom_point()+

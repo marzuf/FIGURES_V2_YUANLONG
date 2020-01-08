@@ -164,7 +164,8 @@ plot(NULL,
      cex.lab = plotCex,
      cex.main = plotCex,
   xlim = c(geneBar_pos-axisOffset, tadBar_pos+axisOffset),
-  ylim = c(-axisOffset, 1+axisOffset)
+  # ylim = c(-axisOffset, 1+axisOffset)
+  ylim = c(1+axisOffset, -axisOffset)  # reverse to have the top ones at the top !
 )
 # mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex)
 mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex-0.2)
@@ -199,7 +200,8 @@ segments(x0=tadBar_pos, y0=0, x1=tadBar_pos, y1=1, lwd=5)
 
 text(
   x = c(geneBar_pos, tadBar_pos),
-  y = 1 + 0.2,
+  # y = 1 + 0.2,
+  y = 0 - 0.2, 
   labels=c("Gene ranks", "TAD ranks"),
   cex = plotCex
 )
@@ -207,6 +209,8 @@ legend(
   "bottom",
   # cex=0.6,
   # horiz=T,
+  lty=c(1, -1, 1, -1),
+  col = c(top_col,top_col, last_col, last_col),
   legend=c(paste0("# top TADs=", length(top_reg)),
            paste0("# genes Top TADs=", sum(ds_dt$dotCol %in% top_col)),
            paste0("# last TADs=", length(last_reg)),
@@ -257,7 +261,8 @@ plot(NULL,
      cex.lab = plotCex,
      cex.main = plotCex,
      xlim = c(geneBar_pos-axisOffset, tadBar_pos+axisOffset),
-     ylim = c(-axisOffset, 1+axisOffset)
+     # ylim = c(-axisOffset, 1+axisOffset)
+     ylim = c(1+axisOffset, -axisOffset)
 )
 # mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex)
 mtext(side=3, paste0(hicds, " - ", exprds), cex=plotCex-0.2)
@@ -292,7 +297,8 @@ segments(x0=tadBar_pos, y0=0, x1=tadBar_pos, y1=1, lwd=5)
 
 text(
   x = c(geneBar_pos, tadBar_pos),
-  y = 1 + 0.2,
+  # y = 1 + 0.2,
+  y = 0 - 0.2,
   labels=c("Median gene rank", "TAD ranks"),
   cex = plotCex
 )
@@ -300,6 +306,8 @@ legend(
   "bottom",
   # cex=0.6,
   # horiz=T,
+  lty=c(1,1),
+  col = c(top_col, last_col),
   legend=c(paste0("# top TADs=", length(top_reg)),
            # paste0("# genes Top TADs=", sum(med_plot_dt$dotCol %in% top_col)),
            # paste0("# genes Last TADs=", sum(med_plot_dt$dotCol %in% last_col)),
