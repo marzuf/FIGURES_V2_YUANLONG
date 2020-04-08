@@ -242,7 +242,6 @@ med_plot_dt$dotCol <- ifelse(med_plot_dt$region %in% top_reg, top_col,
                        ifelse(med_plot_dt$region %in% last_reg, last_col, mid_col))
 stopifnot(!is.na(med_plot_dt$dotCol))
 
-
 geneBar_pos <- 1
 tadBar_pos <- 2
 axisOffset <- 0.5

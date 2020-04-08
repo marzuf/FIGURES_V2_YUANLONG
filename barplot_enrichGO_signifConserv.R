@@ -1,7 +1,7 @@
 startTime <- Sys.time()
 cat(paste0("> Rscript barplot_enrichGO_signifConserv.R\n"))
 
-# Rscript barplot_enrichGO_signifConserv.R 0.01 0.05
+# Rscript barplot_enrichGO_signifConserv.R 0.01 0.01
 
 options(scipen=100)
 
@@ -302,11 +302,11 @@ all_ds_GOtypes_dt_ic_count <- aggregate(GO_term ~ dataset+GO_type, data=all_ds_G
 notNa_tad <- sum(all_ds_GOtypes_dt_ic$GO_type=="tad_signif_GO")
 notNa_limma <- sum(all_ds_GOtypes_dt_ic$GO_type=="limma_signif_GO")
 
-subTit <- paste0("# signif. TAD level = ", notNa_tad, "\n# signif. gene level = ", notNa_limma)
+subTit <- paste0("# signif. TAD level = ", notNa_tad, " (p-val <= ", TAD_pvalThresh, ")\n# signif. gene level = ", notNa_limma, " (p-val <= ", gene_pvalThresh, ")")
 
 
-all_ds_GOtypes_dt_ic$GO_type[all_ds_GOtypes_dt_ic$GO_type == "tad_signif_GO"] <- "gene level signif."
-all_ds_GOtypes_dt_ic$GO_type[all_ds_GOtypes_dt_ic$GO_type == "limma_signif_GO"] <- "TAD level signif."
+all_ds_GOtypes_dt_ic$GO_type[all_ds_GOtypes_dt_ic$GO_type == "tad_signif_GO"] <- "TAD-level signif."
+all_ds_GOtypes_dt_ic$GO_type[all_ds_GOtypes_dt_ic$GO_type == "limma_signif_GO"] <- "gene-level signif."
 
 p <- ggdensity(all_ds_GOtypes_dt_ic, 
                title = paste0("Information content of enriched GO"),
@@ -319,8 +319,9 @@ p <- ggdensity(all_ds_GOtypes_dt_ic,
                palette = c(col1, col2))+ 
   labs(fill="", col="")+
   theme(plot.title = element_text(hjust=0.5, size=16, face="bold"),
-        axis.text = element_text(size=12),
-        axis.title = element_text(size=14)
+            legend.text = element_text(size=12),
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=16)
   )
 
 outFile <- file.path(outFolder, paste0("all_ds_enrichedGO_IC_byGOtype_density.", "png"))
@@ -355,6 +356,9 @@ if(cmpType == "") {
       barLabs <- gsub("_", " ", gsub("GO_", "", names(go_categories_count[1:topCommonBars])))
       barLabs <- sapply(barLabs, function(x) paste(strwrap(x, width = namesWdth), collapse="\n"))
       
+outFile <- file.path(outFolder,paste0("all_ds_count","_",cmp, "_",  gotype, "_", padjVarGO, "_dt_barplot", ".Rdata"))
+save(go_categories_count, file = outFile, version=2)
+
       outFile <- file.path(outFolder,paste0("all_ds_count","_",cmp, "_",  gotype, "_", padjVarGO, "_barplot", ".", plotType))
       do.call(plotType, list(outFile, height = myHeight*1.2, width = myWidth*1.2))    
       par(oma=c(10,1,1,1))
@@ -387,11 +391,16 @@ if(cmpType == "") {
     notNa_tad <- sum(cmp_all_ds_GOtypes_dt_ic$GO_type=="tad_signif_GO")
     notNa_limma <- sum(cmp_all_ds_GOtypes_dt_ic$GO_type=="limma_signif_GO")
     
-    subTit <- paste0("# signif. TAD level = ", notNa_tad, "\n# signif. gene level = ", notNa_limma)
+    #subTit <- paste0("# signif. TAD level = ", notNa_tad, "\n# signif. gene level = ", notNa_limma)
+
+    subTit <- paste0("# signif. TAD level = ", notNa_tad, " (p-val <= ", TAD_pvalThresh, ")\n# signif. gene level = ", notNa_limma, " (p-val <= ", gene_pvalThresh, ")")
     
-    cmp_all_ds_GOtypes_dt_ic$GO_type[cmp_all_ds_GOtypes_dt_ic$GO_type == "tad_signif_GO"] <- "gene level signif."
-    cmp_all_ds_GOtypes_dt_ic$GO_type[cmp_all_ds_GOtypes_dt_ic$GO_type == "limma_signif_GO"] <- "TAD level signif."
-    
+    cmp_all_ds_GOtypes_dt_ic$GO_type[cmp_all_ds_GOtypes_dt_ic$GO_type == "tad_signif_GO"] <- "TAD level signif."
+    cmp_all_ds_GOtypes_dt_ic$GO_type[cmp_all_ds_GOtypes_dt_ic$GO_type == "limma_signif_GO"] <- "gene level signif."
+
+outFile <- file.path(outFolder, paste0(cmp,"_go_IC_dt_densityplot.Rdata"))
+save(cmp_all_ds_GOtypes_dt_ic, file = outFile, version=2)
+
     p <- ggdensity(cmp_all_ds_GOtypes_dt_ic, 
                    # title = paste0("enriched GO IC - ", cmp),
                    title = paste0("Information content of enriched GO - ", cmp),
@@ -404,10 +413,11 @@ if(cmpType == "") {
                    palette = c(col1, col2)) + 
       labs(fill="", col="")+
       theme(plot.title = element_text(hjust=0.5, size=16, face="bold"),
-            axis.text = element_text(size=12),
-            axis.title = element_text(size=14)
+            legend.text = element_text(size=12),
+            axis.text = element_text(size=14),
+            axis.title = element_text(size=16)
             )
-    outFile <- file.path(outFolder, paste0(cmp, "_enrichedGO_IC_byGOtype_density.", plotType))
+    outFile <- file.path(outFolder, paste0(cmp,"_enrichedGO_IC_byGOtype_density.", plotType))
     ggsave(p, file = outFile, height=myHeightGG, width=myWidthGG)
     cat(paste0("... written: ", outFile,"\n"))
   }

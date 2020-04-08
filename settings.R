@@ -9,6 +9,7 @@ runFolder <-  "../v2_Yuanlong_Cancer_HiC_data_TAD_DA/"
 pipFolder <- file.path(runFolder, "PIPELINE/OUTPUT_FOLDER")
 
 all_hicds <- list.files(pipFolder)
+all_hicds <- all_hicds[! (grepl("RANDOM", all_hicds) | grepl("PERMUT", all_hicds))]
 all_exprds <- sapply(all_hicds, function(x) list.files(file.path(pipFolder, x)))
 
 plotCex <- 1.4
@@ -67,5 +68,10 @@ all_cols[all_cols == "red"] <- "violetred" #"chocolate"  # wt vs mut
 all_cols[all_cols == "blue"] <- "slateblue" # norm vs tum
 all_cols[all_cols == "green"] <- "slategray" # "yellow3" # subtypes
 
-options(save.defaults = list(version=2))
+options(save.defaults = list(version=2), scipen=100)
+
+geneSignifThresh <- 0.01
+tadSignifThresh <- 0.01
+
+
 

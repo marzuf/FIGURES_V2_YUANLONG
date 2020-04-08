@@ -16,6 +16,7 @@ startTime <- Sys.time()
 # Rscript fcc_wave_plot.R ENCSR079VIJ_G401_40kb TCGAkich_norm_kich
 # Rscript fcc_wave_plot.R GSE105381_HepG2_40kb TCGAlihc_wt_mutCTNNB1
 # Rscript fcc_wave_plot.R ENCSR312KHQ_SK-MEL-5_40kb TCGAskcm_lowInf_highInf
+# Rscript fcc_wave_plot.R ENCSR312KHQ_SK-MEL-5_40kb TCGAskcm_wt_mutCTNNB1
 
 ################################################################################
 
@@ -234,6 +235,13 @@ auc_obs <- auc(x = x_val, y = obs_cumsum)
 auc_permut <- auc(x = x_val, y = meanPermut_cumsum)
 auc_permutQt <- auc(x = x_val, y = qt95Permut_cumsum)
 
+
+outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_", "auc_obs.Rdata"))
+save(auc_obs, file= outFile)
+cat(paste0("... written: ", outFile, "\n"))
+outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_", "auc_permutQt.Rdata"))
+save(auc_permutQt, file= outFile)
+cat(paste0("... written: ", outFile, "\n"))
 
 # save(auc_obs, file= "auc_obs.Rdata")
 # save(auc_permut, file="auc_permut.Rdata")
